@@ -80,6 +80,10 @@
             box-sizing: border-box;
         }
 
+        .remove-div {
+            visibility: hidden;
+        }
+
         @media (max-width: 600px) {
             .todo-grid {
                 display: flex;
@@ -117,15 +121,16 @@
             const name = inputeElement.value.trim();
 
             const timeinputeElement = document.querySelector('.time-todo');
-            const time = timeinputeElement.value.trim();
+            const time = timeinputeElement.value.trim() || 'Not set';
 
             const dateinputeElement = document.querySelector('.todo-date');
-            const date = dateinputeElement.value.trim();
+            const date = dateinputeElement.value.trim() || 'Not set';
 
             if (!name) {
                 alert('Please fill out all fields.');
                 return;
             }
+
 
             todoList.push({ name, time, date });
             localStorage.setItem('todoList', JSON.stringify(todoList));
@@ -141,15 +146,21 @@
             let todolistHTML = ``;
             for (i = 0; i < todoList.length; i++) {
                 const todoObj = todoList[i];
-                const { name, date, time } = todoObj;
+                const { name, time, date } = todoObj;
+
                 const html = `<div>${name}</div>
                 <div>${time}</div>
                 <div>${date}</div>
-                <div style='border:none;'><button onClick = 'todoList.splice(${i},1);
-                renderHTML();'>Delete</button></div>`
+                <div style='border:none;'><button onClick = 'deleteTodo(${i})'>Delete</button></div>`
                 todolistHTML += html;
             }
             document.querySelector('.todoAdded').innerHTML = todolistHTML;
+        }
+
+        function deleteTodo(index) {
+            todoList.splice(index, 1); // Remove the item from the array
+            localStorage.setItem('todoList', JSON.stringify(todoList)); // Update localStorage
+            renderHTML(); // Re-render the list
         }
 
         window.onload = renderHTML;
