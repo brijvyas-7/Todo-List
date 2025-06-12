@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TO-DO-LISt</title>
+
+
+    <style>
+        body {
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+        }
+
+        .todo-grid {
+            display: grid;
+            grid-template-columns: 178px 100px 120px 58px;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .alert {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+
+<body>
+    <p>TODO LIST</p>
+    <div class="todo-grid">
+        <input type="text" class="js-array">
+        <input type="time" class="time-todo">
+        <input type="date" class="todo-date">
+        <button onclick="addInput()">add</button>
+    </div>
+    <div class="todoAdded todo-grid"></div>
+    <script>
+        const todoList = JSON.parse(localStorage.getItem('todoList')) || [];
+
+        function addInput() {
+            const inputeElement = document.querySelector('.js-array');
+            const name = inputeElement.value.trim();
+
+            const timeinputeElement = document.querySelector('.time-todo');
+            const time = timeinputeElement.value.trim();
+
+            const dateinputeElement = document.querySelector('.todo-date');
+            const date = dateinputeElement.value.trim();
+
+            if (!name || !time || !date) {
+                alert('Please fill out all fields.');
+                return;
+            }
+
+            todoList.push({ name, time, date });
+            localStorage.setItem('todoList', JSON.stringify(todoList));
+            inputeElement.value = '';
+            timeinputeElement.value = '';
+            dateinputeElement.value = '';
+            renderHTML();
+
+
+        }
+
+        function renderHTML() {
+            let todolistHTML = ``;
+            for (i = 0; i < todoList.length; i++) {
+                const todoObj = todoList[i];
+                const { name, date, time } = todoObj;
+                const html = `<div>${name}</div>
+                <div>${time}</div>
+                <div>${date}</div>
+                <button onClick = 'todoList.splice(${i},1);
+                renderHTML();'>Delete</button>`
+                todolistHTML += html;
+            }
+            document.querySelector('.todoAdded').innerHTML = todolistHTML;
+        }
+
+        window.onload = renderHTML;
+
+
+
+    </script>
+</body>
+
+</html>
