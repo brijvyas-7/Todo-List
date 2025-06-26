@@ -152,5 +152,27 @@ if ("Notification" in window && Notification.permission !== "granted") {
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js");
 }
+const pushToggle = document.getElementById("togglePushSwitch");
+
+pushToggle.addEventListener("change", function () {
+  if (this.checked) {
+    Notification.requestPermission().then(permission => {
+      if (permission === "granted") {
+        new Notification("🔔 Push Enabled", {
+          body: "You’ll now receive task reminders!",
+          icon: "icon-192.png"
+        });
+        localStorage.setItem("pushEnabled", "true");
+      } else {
+        this.checked = false;
+        localStorage.setItem("pushEnabled", "false");
+        alert("Notification permission denied.");
+      }
+    });
+  } else {
+    localStorage.setItem("pushEnabled", "false");
+  }
+});
+
 
 window.onload = renderHTML;
