@@ -1,0 +1,122 @@
+
+const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
+let currentEditIndex = null;
+
+document.addEventListener("click", () => {
+  document.getElementById("reminderSound").play().catch(() => {});
+}, { once: true });
+
+function addInput() {
+  const name = document.querySelector(".js-array").value.trim();
+  const time = document.querySelector(".time-todo").value;
+  const date = document.querySelector(".todo-date").value;
+  const priority = document.querySelector(".todo-priority").value;
+  if (!name || !time || !date) return alert("Please fill out all fields.");
+  todoList.push({ name, time, date, priority, alerted: false, completed: false });
+  localStorage.setItem("todoList", JSON.stringify(todoList));
+  renderHTML();
+}
+
+function renderHTML() {
+  const container = document.querySelector(".todoAdded");
+  container.innerHTML = "";
+  todoList.forEach((task, index) => {
+    const badgeClass = task.priority === 'High' ? 'bg-danger' : task.priority === 'Medium' ? 'bg-warning text-dark' : 'bg-success';
+    const timeLeft = getTimeLeft(task.date, task.time);
+    container.innerHTML += `
+      <div class="card mb-3">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="card-title mb-1 ${task.completed ? 'completed' : ''}">${task.name}</h5>
+            <span class="badge ${badgeClass}">${task.priority}</span><br>
+            <small class="text-muted">⏰ ${task.time} | 📅 ${task.date}</small><br>
+            <span class="countdown">⏳ ${timeLeft}</span>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-success" onclick="toggleComplete(${index})">✔️</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="editTask(${index})">✏️</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteTodo(${index})">🗑</button>
+          </div>
+        </div>
+      </div>`;
+  });
+}
+
+function getTimeLeft(date, time) {
+  const now = new Date();
+  const target = new Date(`${date}T${time}`);
+  const diff = target - now;
+  if (diff < 0) return "Due";
+  const minutes = Math.floor((diff / 1000 / 60) % 60);
+  const hours = Math.floor((diff / 1000 / 60 / 60));
+  return `${hours}h ${minutes}m left`;
+}
+
+function toggleComplete(index) {
+  todoList[index].completed = !todoList[index].completed;
+  localStorage.setItem("todoList", JSON.stringify(todoList));
+  renderHTML();
+}
+
+function deleteTodo(index) {
+  todoList.splice(index, 1);
+  localStorage.setItem("todoList", JSON.stringify(todoList));
+  renderHTML();
+}
+
+function editTask(index) {
+  const task = todoList[index];
+  document.getElementById("editTaskName").value = task.name;
+  document.getElementById("editTaskTime").value = task.time;
+  document.getElementById("editTaskDate").value = task.date;
+  document.getElementById("editTaskPriority").value = task.priority;
+  currentEditIndex = index;
+  new bootstrap.Modal(document.getElementById("editModal")).show();
+}
+
+function saveEdit() {
+  if (currentEditIndex === null) return;
+  const task = todoList[currentEditIndex];
+  task.name = document.getElementById("editTaskName").value;
+  task.time = document.getElementById("editTaskTime").value;
+  task.date = document.getElementById("editTaskDate").value;
+  task.priority = document.getElementById("editTaskPriority").value;
+  localStorage.setItem("todoList", JSON.stringify(todoList));
+  renderHTML();
+  bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+}
+
+setInterval(() => {
+  const now = new Date();
+  todoList.forEach((task, i) => {
+    if (!task.alerted && task.time && task.date) {
+      const taskTime = new Date(`${task.date}T${task.time}`);
+      if (Math.abs(now - taskTime) < 120000) {
+        if (Notification.permission === "granted") {
+          new Notification(`Reminder: ${task.name}`, {
+            body: "Your task is due now!",
+            icon: "icon-192.png"
+          });
+        }
+        document.getElementById("reminderSound").play().catch(() => {});
+        task.alerted = true;
+      }
+    }
+  });
+  localStorage.setItem("todoList", JSON.stringify(todoList));
+  renderHTML();
+}, 10000);
+
+document.getElementById("toggleDarkMode").onclick = () => {
+  document.body.classList.toggle("dark-mode");
+};
+
+if ("Notification" in window && Notification.permission !== "granted") {
+  Notification.requestPermission();
+}
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
+
+window.onload = renderHTML;
