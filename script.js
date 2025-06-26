@@ -1,4 +1,3 @@
-
 const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
 let currentEditIndex = null;
 
@@ -7,13 +6,25 @@ document.addEventListener("click", () => {
 }, { once: true });
 
 function addInput() {
-  const name = document.querySelector(".js-array").value.trim();
-  const time = document.querySelector(".time-todo").value;
-  const date = document.querySelector(".todo-date").value;
+  const inputEl = document.querySelector(".js-array");
+  const timeEl = document.querySelector(".time-todo");
+  const dateEl = document.querySelector(".todo-date");
   const priority = document.querySelector(".todo-priority").value;
+
+  const name = inputEl.value.trim();
+  const time = timeEl.value;
+  const date = dateEl.value;
+
   if (!name || !time || !date) return alert("Please fill out all fields.");
+
   todoList.push({ name, time, date, priority, alerted: false, completed: false });
   localStorage.setItem("todoList", JSON.stringify(todoList));
+
+  // ✅ Clear input fields
+  inputEl.value = "";
+  timeEl.value = "";
+  dateEl.value = "";
+
   renderHTML();
 }
 
@@ -98,6 +109,11 @@ setInterval(() => {
             icon: "icon-192.png"
           });
         }
+
+        // ✅ Show web toast
+        document.getElementById("webToastText").innerText = `⏰ Reminder: ${task.name}`;
+        new bootstrap.Toast(document.getElementById("webToast")).show();
+
         document.getElementById("reminderSound").play().catch(() => {});
         task.alerted = true;
       }
@@ -107,9 +123,27 @@ setInterval(() => {
   renderHTML();
 }, 10000);
 
-document.getElementById("toggleDarkMode").onclick = () => {
+const darkToggle = document.getElementById("toggleDarkModeSwitch");
+const icon = document.querySelector(".slider .icon");
+
+darkToggle.addEventListener("change", function () {
   document.body.classList.toggle("dark-mode");
+  localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+  icon.textContent = this.checked ? "☀️" : "🌙";
+});
+
+window.onload = () => {
+  renderHTML();
+  const savedTheme = localStorage.getItem("darkMode") === "true";
+  if (savedTheme) {
+    document.body.classList.add("dark-mode");
+    darkToggle.checked = true;
+    icon.textContent = "☀️";
+  } else {
+    icon.textContent = "🌙";
+  }
 };
+
 
 if ("Notification" in window && Notification.permission !== "granted") {
   Notification.requestPermission();
