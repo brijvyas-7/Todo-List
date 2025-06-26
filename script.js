@@ -1,3 +1,4 @@
+// Updated script.js with persistent notification loop
 const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
 let currentEditIndex = null;
 
@@ -117,6 +118,7 @@ function saveEdit() {
   bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
 }
 
+// Persistent notification checker
 setInterval(() => {
   const now = new Date();
   todoList.forEach((task, i) => {
@@ -128,11 +130,11 @@ setInterval(() => {
             body: "Your task is due now!",
             icon: "icon-192.png"
           });
+        } else {
+          alert(`🔔 Reminder: ${task.name}`);
         }
-
         document.getElementById("webToastText").innerText = `⏰ Reminder: ${task.name}`;
         new bootstrap.Toast(document.getElementById("webToast")).show();
-
         document.getElementById("reminderSound").play().catch(() => {});
         task.alerted = true;
       }
@@ -187,7 +189,6 @@ window.onload = () => {
   } else {
     icon.textContent = "🌙";
   }
-
   const pushPref = localStorage.getItem("pushEnabled") === "true";
   document.getElementById("togglePushSwitch").checked = pushPref;
 };
