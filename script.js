@@ -1,182 +1,202 @@
-<!DOCTYPE html>
-<html lang="en">
+// Updated script.js with persistent notification loop
+const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
+let currentEditIndex = null;
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>To-Do App</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0d6efd" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="icon" type="image/png" href="favicon.png">
-  <style>
-    body.dark-mode {
-      background-color: #121212;
-      color: #fff;
-    }
+// Unlock audio on first interaction without actually playing it
+document.addEventListener("click", () => {
+  const audio = document.getElementById("reminderSound");
+  audio.play().then(() => {
+    audio.pause();
+    audio.currentTime = 0;
+  }).catch(() => {});
+}, { once: true });
 
-    .dark-mode .card {
-      background-color: #1f1f1f;
-      color: #fff;
-    }
+function addInput() {
+  const inputEl = document.querySelector(".js-array");
+  const timeEl = document.querySelector(".time-todo");
+  const dateEl = document.querySelector(".todo-date");
+  const priority = document.querySelector(".todo-priority").value;
 
-    .completed {
-      text-decoration: line-through;
-      color: gray;
-    }
+  const name = inputEl.value.trim();
+  const time = timeEl.value;
+  const date = dateEl.value;
 
-    .countdown {
-      font-size: 0.9rem;
-      color: #6c757d;
-    }
+  if (!name || !time || !date) return alert("Please fill out all fields.");
 
-    .dark-mode #toggleDarkMode {
-      background-color: #333;
-      color: #fff;
-      border: 1px solid #555;
-    }
+  todoList.push({ name, time, date, priority, alerted: false, completed: false });
+  try {
+    localStorage.setItem("todoList", JSON.stringify(todoList));
+  } catch (e) {
+    alert("🚫 Storage full! Please clear some old tasks.");
+  }
 
-    .dark-mode .form-check-label {
-      color: #fff;
-    }
+  inputEl.value = "";
+  timeEl.value = "";
+  dateEl.value = "";
 
-    .dark-toggle-wrapper {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+  renderHTML();
+}
 
-    .form-switch {
-      position: relative;
-      display: inline-block;
-      width: 70px;
-      height: 36px;
-    }
-
-    .form-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      background-color: #111;
-      border-radius: 50px;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      transition: 0.4s;
-      display: flex;
-      align-items: center;
-      padding-left: 10px;
-    }
-
-    .slider .icon {
-      color: #fff;
-      font-size: 18px;
-      transition: transform 0.4s ease;
-    }
-
-    input:checked+.slider {
-      background-color: #0d6efd;
-      padding-left: 36px;
-    }
-
-    input:checked+.slider .icon {
-
-      transform: rotate(360deg);
-    }
-
-    .task-meta {
-      color: #333;
-    }
-
-    .dark-mode .task-meta {
-      color: #ccc;
-      /* Light gray in dark mode */
-    }
-  </style>
-</head>
-
-<body>
-  <div class="container py-5 d-flex flex-column align-items-center">
-    <h1 class="text-center mb-3">📝 To-Do List</h1>
-    <div class="d-flex align-items-center justify-content-center gap-4 mb-4">
-      <!-- Dark Mode Toggle -->
-      <label class="form-switch">
-        <input type="checkbox" id="toggleDarkModeSwitch">
-        <span class="slider"><span class="icon">🌙</span></span>
-      </label>
-
-      <!-- Push Notification Toggle -->
-      <label class="form-switch">
-        <input type="checkbox" id="togglePushSwitch">
-        <span class="slider"><span class="icon">🔔</span></span>
-      </label>
-    </div>
-
-
-
-
-    <div class="card p-4 w-100" style="max-width: 800px;">
-      <div class="row g-3">
-        <div class="col-md-4"><input type="text" class="form-control js-array" placeholder="Enter task..."></div>
-        <div class="col-md-2"><input type="time" class="form-control time-todo"></div>
-        <div class="col-md-2"><input type="date" class="form-control todo-date"></div>
-        <div class="col-md-2">
-          <select class="form-select todo-priority">
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-            <option value="Low">Low</option>
-          </select>
+function renderHTML() {
+  const container = document.querySelector(".todoAdded");
+  container.innerHTML = "";
+  todoList.forEach((task, index) => {
+    const badgeClass = task.priority === 'High' ? 'bg-danger' : task.priority === 'Medium' ? 'bg-warning text-dark' : 'bg-success';
+    const timeLeft = getTimeLeft(task.date, task.time);
+    container.innerHTML += `
+      <div class="card mb-3">
+        <div class="card-body d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="card-title mb-1 ${task.completed ? 'completed' : ''}">${task.name}</h5>
+            <span class="badge ${badgeClass}">${task.priority}</span><br>
+            <small class="task-meta">⏰ ${task.time} | 📅 ${task.date}</small><br>
+            <span class="countdown">⏳ ${timeLeft}</span>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-success" onclick="toggleComplete(${index})">✔️</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="editTask(${index})">✏️</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteTodo(${index})">🗑</button>
+          </div>
         </div>
-        <div class="col-md-2"><button onclick="addInput()" class="btn btn-primary w-100">Add</button></div>
-      </div>
-    </div>
-    <div class="todoAdded w-100 mt-4" style="max-width: 800px;"></div>
-  </div>
+      </div>`;
+  });
+}
 
-  <!-- Toast for Web Alerts -->
-  <div class="toast-container position-fixed top-0 end-0 p-3">
-    <div id="webToast" class="toast align-items-center text-bg-primary border-0" role="alert">
-      <div class="d-flex">
-        <div class="toast-body" id="webToastText">Reminder triggered</div>
-        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-      </div>
-    </div>
-  </div>
+function getTimeLeft(date, time) {
+  const now = new Date();
+  const target = new Date(`${date}T${time}`);
+  const diff = target - now;
+  if (diff < 0) return "Due";
+  const minutes = Math.floor((diff / 1000 / 60) % 60);
+  const hours = Math.floor((diff / 1000 / 60 / 60));
+  return `${hours}h ${minutes}m left`;
+}
 
-  <!-- Modal for Editing -->
-  <div class="modal fade" id="editModal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Edit Task</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <input type="text" id="editTaskName" class="form-control mb-2" />
-          <input type="time" id="editTaskTime" class="form-control mb-2" />
-          <input type="date" id="editTaskDate" class="form-control mb-2" />
-          <select id="editTaskPriority" class="form-select">
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low</option>
-          </select>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" onclick="saveEdit()">Save</button>
-        </div>
-      </div>
-    </div>
-  </div>
+function toggleComplete(index) {
+  todoList[index].completed = !todoList[index].completed;
+  try {
+    localStorage.setItem("todoList", JSON.stringify(todoList));
+  } catch (e) {
+    alert("🚫 Unable to save completion status. Storage might be full.");
+  }
+  renderHTML();
+}
 
-  <audio id="reminderSound" src="notification.mp3" preload="auto"></audio>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="script.js"></script>
-</body>
+function deleteTodo(index) {
+  todoList.splice(index, 1);
+  try {
+    localStorage.setItem("todoList", JSON.stringify(todoList));
+  } catch (e) {
+    alert("⚠️ Failed to delete task due to full storage.");
+  }
+  renderHTML();
+}
 
-</html>
+function editTask(index) {
+  const task = todoList[index];
+  document.getElementById("editTaskName").value = task.name;
+  document.getElementById("editTaskTime").value = task.time;
+  document.getElementById("editTaskDate").value = task.date;
+  document.getElementById("editTaskPriority").value = task.priority;
+  currentEditIndex = index;
+  new bootstrap.Modal(document.getElementById("editModal")).show();
+}
+
+function saveEdit() {
+  if (currentEditIndex === null) return;
+  const task = todoList[currentEditIndex];
+  task.name = document.getElementById("editTaskName").value;
+  task.time = document.getElementById("editTaskTime").value;
+  task.date = document.getElementById("editTaskDate").value;
+  task.priority = document.getElementById("editTaskPriority").value;
+  try {
+    localStorage.setItem("todoList", JSON.stringify(todoList));
+  } catch (e) {
+    alert("⚠️ Couldn't save changes. You may be out of storage space.");
+  }
+  renderHTML();
+  bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+}
+
+// Persistent notification checker
+setInterval(() => {
+  const now = new Date();
+  todoList.forEach((task, i) => {
+    if (!task.alerted && task.time && task.date) {
+      const taskTime = new Date(`${task.date}T${task.time}`);
+      if (!task.alerted && taskTime <= now && (now - taskTime) <= 60000) {
+        if (Notification.permission === "granted") {
+          new Notification(`Reminder: ${task.name}`, {
+            body: "Your task is due now!",
+            icon: "icon-192.png"
+          });
+        } else {
+          alert(`🔔 Reminder: ${task.name}`);
+        }
+        document.getElementById("webToastText").innerText = `⏰ Reminder: ${task.name}`;
+        new bootstrap.Toast(document.getElementById("webToast")).show();
+        document.getElementById("reminderSound").play().catch(() => {});
+        task.alerted = true;
+      }
+    }
+  });
+  try {
+    localStorage.setItem("todoList", JSON.stringify(todoList));
+  } catch (e) {
+    console.warn("⚠️ Reminder status could not be saved. Storage may be full.");
+  }
+  renderHTML();
+}, 10000);
+
+const darkToggle = document.getElementById("toggleDarkModeSwitch");
+const icon = document.querySelector(".slider .icon");
+
+darkToggle.addEventListener("change", function () {
+  document.body.classList.toggle("dark-mode");
+  localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+  icon.textContent = this.checked ? "☀️" : "🌙";
+});
+
+const pushToggle = document.getElementById("togglePushSwitch");
+
+pushToggle.addEventListener("change", function () {
+  if (this.checked) {
+    Notification.requestPermission().then(permission => {
+      if (permission === "granted") {
+        new Notification("🔔 Push Enabled", {
+          body: "You’ll now receive task reminders!",
+          icon: "icon-192.png"
+        });
+        localStorage.setItem("pushEnabled", "true");
+      } else {
+        this.checked = false;
+        localStorage.setItem("pushEnabled", "false");
+        alert("Notification permission denied.");
+      }
+    });
+  } else {
+    localStorage.setItem("pushEnabled", "false");
+  }
+});
+
+window.onload = () => {
+  renderHTML();
+  const savedTheme = localStorage.getItem("darkMode") === "true";
+  if (savedTheme) {
+    document.body.classList.add("dark-mode");
+    darkToggle.checked = true;
+    icon.textContent = "☀️";
+  } else {
+    icon.textContent = "🌙";
+  }
+  const pushPref = localStorage.getItem("pushEnabled") === "true";
+  document.getElementById("togglePushSwitch").checked = pushPref;
+};
+
+if ("Notification" in window && Notification.permission !== "granted") {
+  Notification.requestPermission();
+}
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
