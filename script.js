@@ -1,9 +1,15 @@
 const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
 let currentEditIndex = null;
 
+// Unlock audio on first interaction without actually playing it
 document.addEventListener("click", () => {
-  document.getElementById("reminderSound").play().catch(() => {});
+  const audio = document.getElementById("reminderSound");
+  audio.play().then(() => {
+    audio.pause();
+    audio.currentTime = 0;
+  }).catch(() => {});
 }, { once: true });
+
 
 function addInput() {
   const inputEl = document.querySelector(".js-array");
@@ -40,7 +46,7 @@ function renderHTML() {
           <div>
             <h5 class="card-title mb-1 ${task.completed ? 'completed' : ''}">${task.name}</h5>
             <span class="badge ${badgeClass}">${task.priority}</span><br>
-            <small class="text-muted">⏰ ${task.time} | 📅 ${task.date}</small><br>
+            <small class="task-meta">⏰ ${task.time} | 📅 ${task.date}</small><br>
             <span class="countdown">⏳ ${timeLeft}</span>
           </div>
           <div class="d-flex gap-2">
@@ -114,7 +120,7 @@ setInterval(() => {
         document.getElementById("webToastText").innerText = `⏰ Reminder: ${task.name}`;
         new bootstrap.Toast(document.getElementById("webToast")).show();
 
-        document.getElementById("reminderSound").play().catch(() => {});
+        document.getElementById("reminderSound").play().catch(() => { });
         task.alerted = true;
       }
     }
