@@ -2,172 +2,126 @@
 <html lang="en">
 
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>To-Do List</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TO-DO-LISt</title>
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
 
+    .completed {
+      text-decoration: line-through;
+      color: gray;
+    }
 
-    <style>
-        body {
-            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            height: 100vh;
-        }
+    .main-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 30px;
+      color: #0d6efd;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    }
 
-        .todo-grid {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            margin-top: 20px;
-            width: 100%;
-            max-width: 400px;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-
-        .todo-grid input,
-        .todo-grid button {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            box-sizing: border-box;
-        }
-
-        .todoAdded {
-            width: 100%;
-            max-width: 400px;
-            margin-top: 20px;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-
-        .todoAdded div {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px;
-            border: 1px solid #ccc;
-            margin-bottom: 10px;
-
-        }
-
-        .todoAdded button {
-            background-color: red;
-            color: white;
-            border: none;
-            cursor: pointer;
-            padding: 5px;
-
-            margin-bottom: 10px;
-        }
-
-        .todoAdded button:hover {
-            background-color: darkred;
-        }
-
-        .todoAdded>div:last-child,
-        .todoAdded button {
-
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            box-sizing: border-box;
-        }
-
-        .remove-div {
-            visibility: hidden;
-        }
-
-        @media (max-width: 600px) {
-            .todo-grid {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 10px;
-                margin-top: 20px;
-                width: 100%;
-                max-width: 400px;
-                padding: 10px;
-                box-sizing: border-box;
-            }
-
-            .todoAdded {
-                width: 90%;
-            }
-        }
-    </style>
+    @media (min-width: 768px) {
+      .todo-container {
+        max-width: 700px;
+      }
+    }
+  </style>
 </head>
 
 <body>
-    <p>TODO LIST</p>
-    <div class="todo-grid">
-        <input type="text" placeholder="Please enter your Todo..." class="js-array">
-        <input type="time" class="time-todo">
-        <input type="date" class="todo-date">
-        <button onclick="addInput()">add</button>
+  <div class="container py-5 d-flex flex-column align-items-center">
+    <h1 class="main-title text-center">📝 My To-Do List</h1>
+
+    <div class="todo-container w-100">
+      <div class="card shadow mb-4">
+        <div class="card-body">
+          <div class="row g-2">
+            <div class="col-md-6 col-12">
+              <input type="text" class="form-control js-array" placeholder="Enter your task...">
+            </div>
+            <div class="col-md-2 col-6">
+              <input type="time" class="form-control time-todo">
+            </div>
+            <div class="col-md-2 col-6">
+              <input type="date" class="form-control todo-date">
+            </div>
+            <div class="col-md-2 col-12">
+              <button onclick="addInput()" class="btn btn-primary w-100">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="todoAdded">
+        <!-- Tasks will appear here -->
+      </div>
     </div>
-    <div class="todoAdded todo-grid1"></div>
-    <script>
-        const todoList = JSON.parse(localStorage.getItem('todoList')) || [];
+  </div>
 
-        function addInput() {
-            const inputeElement = document.querySelector('.js-array');
-            const name = inputeElement.value.trim();
+  <script>
+    const todoList = JSON.parse(localStorage.getItem('todoList')) || [];
 
-            const timeinputeElement = document.querySelector('.time-todo');
-            const time = timeinputeElement.value.trim() || 'Not set';
+    function addInput() {
+      const inputeElement = document.querySelector('.js-array');
+      const name = inputeElement.value.trim();
 
-            const dateinputeElement = document.querySelector('.todo-date');
-            const date = dateinputeElement.value.trim() || 'Not set';
+      const timeinputeElement = document.querySelector('.time-todo');
+      const time = timeinputeElement.value.trim() || 'Not set';
 
-            if (!name) {
-                alert('Please fill out all fields.');
-                return;
-            }
+      const dateinputeElement = document.querySelector('.todo-date');
+      const date = dateinputeElement.value.trim() || 'Not set';
 
+      if (!name) {
+        alert('Please enter a task.');
+        return;
+      }
 
-            todoList.push({ name, time, date });
-            localStorage.setItem('todoList', JSON.stringify(todoList));
-            inputeElement.value = '';
-            timeinputeElement.value = '';
-            dateinputeElement.value = '';
-            renderHTML();
+      todoList.push({ name, time, date });
+      localStorage.setItem('todoList', JSON.stringify(todoList));
 
+      inputeElement.value = '';
+      timeinputeElement.value = '';
+      dateinputeElement.value = '';
 
-        }
+      renderHTML();
+    }
 
-        function renderHTML() {
-            let todolistHTML = ``;
-            for (i = 0; i < todoList.length; i++) {
-                const todoObj = todoList[i];
-                const { name, time, date } = todoObj;
+    function renderHTML() {
+      let todolistHTML = '';
 
-                const html = `<div>${name}</div>
-                <div>${time}</div>
-                <div>${date}</div>
-                <div style='border:none;'><button onClick = 'deleteTodo(${i})'>Delete</button></div>`
-                todolistHTML += html;
-            }
-            document.querySelector('.todoAdded').innerHTML = todolistHTML;
-        }
+      for (let i = 0; i < todoList.length; i++) {
+        const { name, time, date } = todoList[i];
 
-        function deleteTodo(index) {
-            todoList.splice(index, 1); // Remove the item from the array
-            localStorage.setItem('todoList', JSON.stringify(todoList)); // Update localStorage
-            renderHTML(); // Re-render the list
-        }
+        const html = `
+          <div class="card shadow-sm mb-3">
+            <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-center">
+              <div>
+                <h5 class="mb-1">${name}</h5>
+                <small class="text-muted">⏰ ${time} | 📅 ${date}</small>
+              </div>
+              <button onClick='deleteTodo(${i})' class="btn btn-sm btn-danger mt-2 mt-md-0">Delete</button>
+            </div>
+          </div>
+        `;
+        todolistHTML += html;
+      }
 
-        window.onload = renderHTML;
+      document.querySelector('.todoAdded').innerHTML = todolistHTML;
+    }
 
+    function deleteTodo(index) {
+      todoList.splice(index, 1);
+      localStorage.setItem('todoList', JSON.stringify(todoList));
+      renderHTML();
+    }
 
-
-    </script>
+    window.onload = renderHTML;
+  </script>
 </body>
 
 </html>
