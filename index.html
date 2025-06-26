@@ -89,6 +89,15 @@
 
       transform: rotate(360deg);
     }
+
+    .task-meta {
+      color: #333;
+    }
+
+    .dark-mode .task-meta {
+      color: #ccc;
+      /* Light gray in dark mode */
+    }
   </style>
 </head>
 
@@ -96,20 +105,20 @@
   <div class="container py-5 d-flex flex-column align-items-center">
     <h1 class="text-center mb-3">📝 To-Do List</h1>
     <div class="d-flex align-items-center justify-content-center gap-4 mb-4">
-  <!-- Dark Mode Toggle -->
-  <label class="form-switch">
-    <input type="checkbox" id="toggleDarkModeSwitch">
-    <span class="slider"><span class="icon">🌙</span></span>
-  </label>
+      <!-- Dark Mode Toggle -->
+      <label class="form-switch">
+        <input type="checkbox" id="toggleDarkModeSwitch">
+        <span class="slider"><span class="icon">🌙</span></span>
+      </label>
 
-  <!-- Push Notification Toggle -->
-  <label class="form-switch">
-    <input type="checkbox" id="togglePushSwitch">
-    <span class="slider"><span class="icon">🔔</span></span>
-  </label>
-</div>
+      <!-- Push Notification Toggle -->
+      <label class="form-switch">
+        <input type="checkbox" id="togglePushSwitch">
+        <span class="slider"><span class="icon">🔔</span></span>
+      </label>
+    </div>
 
-    
+
 
 
     <div class="card p-4 w-100" style="max-width: 800px;">
