@@ -10,7 +10,6 @@ document.addEventListener("click", () => {
   }).catch(() => {});
 }, { once: true });
 
-
 function addInput() {
   const inputEl = document.querySelector(".js-array");
   const timeEl = document.querySelector(".time-todo");
@@ -24,9 +23,12 @@ function addInput() {
   if (!name || !time || !date) return alert("Please fill out all fields.");
 
   todoList.push({ name, time, date, priority, alerted: false, completed: false });
-  localStorage.setItem("todoList", JSON.stringify(todoList));
+  try {
+    localStorage.setItem("todoList", JSON.stringify(todoList));
+  } catch (e) {
+    alert("🚫 Storage full! Please clear some old tasks.");
+  }
 
-  // ✅ Clear input fields
   inputEl.value = "";
   timeEl.value = "";
   dateEl.value = "";
@@ -71,13 +73,21 @@ function getTimeLeft(date, time) {
 
 function toggleComplete(index) {
   todoList[index].completed = !todoList[index].completed;
-  localStorage.setItem("todoList", JSON.stringify(todoList));
+  try {
+    localStorage.setItem("todoList", JSON.stringify(todoList));
+  } catch (e) {
+    alert("🚫 Unable to save completion status. Storage might be full.");
+  }
   renderHTML();
 }
 
 function deleteTodo(index) {
   todoList.splice(index, 1);
-  localStorage.setItem("todoList", JSON.stringify(todoList));
+  try {
+    localStorage.setItem("todoList", JSON.stringify(todoList));
+  } catch (e) {
+    alert("⚠️ Failed to delete task due to full storage.");
+  }
   renderHTML();
 }
 
@@ -98,7 +108,11 @@ function saveEdit() {
   task.time = document.getElementById("editTaskTime").value;
   task.date = document.getElementById("editTaskDate").value;
   task.priority = document.getElementById("editTaskPriority").value;
-  localStorage.setItem("todoList", JSON.stringify(todoList));
+  try {
+    localStorage.setItem("todoList", JSON.stringify(todoList));
+  } catch (e) {
+    alert("⚠️ Couldn't save changes. You may be out of storage space.");
+  }
   renderHTML();
   bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
 }
@@ -116,16 +130,19 @@ setInterval(() => {
           });
         }
 
-        // ✅ Show web toast
         document.getElementById("webToastText").innerText = `⏰ Reminder: ${task.name}`;
         new bootstrap.Toast(document.getElementById("webToast")).show();
 
-        document.getElementById("reminderSound").play().catch(() => { });
+        document.getElementById("reminderSound").play().catch(() => {});
         task.alerted = true;
       }
     }
   });
-  localStorage.setItem("todoList", JSON.stringify(todoList));
+  try {
+    localStorage.setItem("todoList", JSON.stringify(todoList));
+  } catch (e) {
+    console.warn("⚠️ Reminder status could not be saved. Storage may be full.");
+  }
   renderHTML();
 }, 10000);
 
@@ -138,26 +155,6 @@ darkToggle.addEventListener("change", function () {
   icon.textContent = this.checked ? "☀️" : "🌙";
 });
 
-window.onload = () => {
-  renderHTML();
-  const savedTheme = localStorage.getItem("darkMode") === "true";
-  if (savedTheme) {
-    document.body.classList.add("dark-mode");
-    darkToggle.checked = true;
-    icon.textContent = "☀️";
-  } else {
-    icon.textContent = "🌙";
-  }
-};
-
-
-if ("Notification" in window && Notification.permission !== "granted") {
-  Notification.requestPermission();
-}
-
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js");
-}
 const pushToggle = document.getElementById("togglePushSwitch");
 
 pushToggle.addEventListener("change", function () {
@@ -180,5 +177,25 @@ pushToggle.addEventListener("change", function () {
   }
 });
 
+window.onload = () => {
+  renderHTML();
+  const savedTheme = localStorage.getItem("darkMode") === "true";
+  if (savedTheme) {
+    document.body.classList.add("dark-mode");
+    darkToggle.checked = true;
+    icon.textContent = "☀️";
+  } else {
+    icon.textContent = "🌙";
+  }
 
-window.onload = renderHTML;
+  const pushPref = localStorage.getItem("pushEnabled") === "true";
+  document.getElementById("togglePushSwitch").checked = pushPref;
+};
+
+if ("Notification" in window && Notification.permission !== "granted") {
+  Notification.requestPermission();
+}
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
+}
