@@ -1,35 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>To-Do List</title>
+  <title>Advanced To-Do List</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <style>
     body {
-      background-color: #f8f9fa;
+      background-color: var(--bs-body-bg);
+      transition: background-color 0.3s ease;
     }
-
     .completed {
       text-decoration: line-through;
       color: gray;
     }
-
     .main-title {
       font-size: 2.5rem;
       font-weight: 700;
       margin-bottom: 30px;
       color: #0d6efd;
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
     }
-
-    @media (min-width: 768px) {
-      .todo-container {
-        max-width: 700px;
-      }
+    .dark-mode {
+      background-color: #121212 !important;
+      color: #ffffff;
     }
-
+    .dark-mode .card {
+      background-color: #1f1f1f;
+      color: #fff;
+    }
+    .dark-mode .main-title {
+      color: #ffffff;
+    }
+    .dark-mode .btn-dark-mode {
+      background-color: #333;
+      color: #fff;
+      border: 1px solid #444;
+    }
+    .dark-mode .btn-dark-mode:hover {
+      background-color: #444;
+    }
+    .btn-dark-mode {
+      background-color: #f8f9fa;
+      color: #000;
+    }
+    .btn-dark-mode:hover {
+      background-color: #e2e6ea;
+    }
     .toast-container {
       position: fixed;
       top: 20px;
@@ -38,170 +54,203 @@
     }
   </style>
 </head>
-
 <body>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
+      }
+    });
+  </script>
+
   <div class="container py-5 d-flex flex-column align-items-center">
     <h1 class="main-title text-center">📝 My To-Do List</h1>
-
-    <div class="todo-container w-100">
-      <div class="card shadow mb-4">
-        <div class="card-body">
-          <div class="row g-2">
-            <div class="col-md-4 col-12">
-              <input type="text" class="form-control js-array" placeholder="Enter your task...">
-            </div>
-            <div class="col-md-2 col-6">
-              <input type="time" class="form-control time-todo">
-            </div>
-            <div class="col-md-2 col-6">
-              <input type="date" class="form-control todo-date">
-            </div>
-            <div class="col-md-2 col-6">
-              <select class="form-select todo-priority">
-                <option value="Medium" selected>Medium</option>
-                <option value="High">High</option>
-                <option value="Low">Low</option>
-              </select>
-            </div>
-            <div class="col-md-2 col-6">
-              <button onclick="addInput()" class="btn btn-primary w-100">Add</button>
-            </div>
-          </div>
+    <div class="mb-3">
+      <button class="btn btn-dark-mode" id="toggleDarkMode">🌙 Dark Mode</button>
+    </div>
+    <div class="card p-4 w-100" style="max-width: 800px">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <input type="text" class="form-control js-array" placeholder="Enter task...">
+        </div>
+        <div class="col-md-2">
+          <input type="time" class="form-control time-todo">
+        </div>
+        <div class="col-md-2">
+          <input type="date" class="form-control todo-date">
+        </div>
+        <div class="col-md-2">
+          <select class="form-select todo-priority">
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button onclick="addInput()" class="btn btn-primary w-100">Add</button>
         </div>
       </div>
+    </div>
+    <div class="todoAdded w-100 mt-4" style="max-width: 800px"></div>
+  </div>
 
-      <div class="todoAdded">
-        <!-- Tasks will show here -->
+  <!-- Edit Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Task</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" id="editTaskName" class="form-control mb-2" />
+          <input type="time" id="editTaskTime" class="form-control mb-2" />
+          <input type="date" id="editTaskDate" class="form-control mb-2" />
+          <select id="editTaskPriority" class="form-select">
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" onclick="saveEdit()">Save</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Toast -->
+  <!-- Toast & Sound -->
   <div class="toast-container">
-    <div id="toastAlert" class="toast text-bg-primary border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div id="toastAlert" class="toast text-bg-primary border-0" role="alert">
       <div class="d-flex">
         <div class="toast-body" id="toastText">Reminder Triggered</div>
         <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
       </div>
     </div>
   </div>
+  <audio id="reminderSound" src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3" preload="auto"></audio>
 
-  <!-- Sound -->
-  <audio id="reminderSound" src="https://www.soundjay.com/buttons/sounds/beep-07.mp3" preload="auto"></audio>
-
+  <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
   <script>
-    const todoList = JSON.parse(localStorage.getItem('todoList')) || [];
+    const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
+    let currentEditIndex = null;
 
     function addInput() {
-      const name = document.querySelector('.js-array').value.trim();
-      const time = document.querySelector('.time-todo').value.trim();
-      const date = document.querySelector('.todo-date').value.trim();
-      const priority = document.querySelector('.todo-priority').value;
-
-      if (!name || !time || !date) {
-        alert("Please fill all fields!");
-        return;
-      }
-
-      todoList.push({ name, time, date, priority, done: false, alerted: false });
-      localStorage.setItem('todoList', JSON.stringify(todoList));
-      clearInputs();
+      const name = document.querySelector(".js-array").value.trim();
+      const time = document.querySelector(".time-todo").value;
+      const date = document.querySelector(".todo-date").value;
+      const priority = document.querySelector(".todo-priority").value;
+      if (!name || !time || !date) return alert("Please fill out all fields.");
+      todoList.push({ name, time, date, priority, alerted: false, completed: false });
+      localStorage.setItem("todoList", JSON.stringify(todoList));
+      document.querySelector(".js-array").value = "";
+      document.querySelector(".time-todo").value = "";
+      document.querySelector(".todo-date").value = "";
       renderHTML();
     }
 
-    function clearInputs() {
-      document.querySelector('.js-array').value = '';
-      document.querySelector('.time-todo').value = '';
-      document.querySelector('.todo-date').value = '';
-      document.querySelector('.todo-priority').value = 'Medium';
-    }
-
     function renderHTML() {
-      let todoHTML = '';
-      todoList.forEach((task, i) => {
-        const badgeClass = task.priority === "High" ? "bg-danger" :
-                          task.priority === "Medium" ? "bg-warning text-dark" :
-                          "bg-success";
-        const doneClass = task.done ? "completed" : "";
-
-        todoHTML += `
-          <div class="card shadow-sm mb-3">
-            <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-center">
+      const container = document.querySelector(".todoAdded");
+      container.innerHTML = "";
+      todoList.forEach((task, index) => {
+        const taskTime = new Date(`${task.date}T${task.time}`);
+        const timeString = new Intl.DateTimeFormat('en-IN', {
+          hour: 'numeric', minute: 'numeric', hour12: true, timeZone: 'Asia/Kolkata'
+        }).format(taskTime);
+        const badgeClass = task.priority === 'High' ? 'bg-danger' : task.priority === 'Medium' ? 'bg-warning text-dark' : 'bg-success';
+        container.innerHTML += `
+          <div class="card mb-3">
+            <div class="card-body d-flex justify-content-between align-items-center">
               <div>
-                <h5 class="mb-1 ${doneClass}">${task.name}</h5>
+                <h5 class="card-title mb-1 ${task.completed ? 'completed' : ''}">${task.name}</h5>
                 <span class="badge ${badgeClass}">${task.priority}</span><br>
-                <small class="text-muted">⏰ ${task.time} | 📅 ${task.date}</small>
+                <small class="text-muted">⏰ ${timeString} | 📅 ${task.date}</small>
               </div>
-              <div class="mt-2 mt-md-0">
-                <button class="btn btn-sm btn-outline-success me-1" onclick="toggleDone(${i})">✔</button>
-                <button class="btn btn-sm btn-outline-info me-1" onclick="editTodo(${i})">✏️</button>
-                <button class="btn btn-sm btn-outline-danger" onclick="deleteTodo(${i})">🗑</button>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-success" onclick="toggleComplete(${index})">✔️</button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="editTask(${index})">✏️</button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteTodo(${index})">🗑</button>
               </div>
             </div>
           </div>`;
       });
-      document.querySelector('.todoAdded').innerHTML = todoHTML;
     }
 
     function deleteTodo(index) {
       todoList.splice(index, 1);
-      localStorage.setItem('todoList', JSON.stringify(todoList));
+      localStorage.setItem("todoList", JSON.stringify(todoList));
       renderHTML();
     }
 
-    function toggleDone(index) {
-      todoList[index].done = !todoList[index].done;
-      localStorage.setItem('todoList', JSON.stringify(todoList));
+    function toggleComplete(index) {
+      todoList[index].completed = !todoList[index].completed;
+      localStorage.setItem("todoList", JSON.stringify(todoList));
       renderHTML();
     }
 
-    function editTodo(index) {
+    function editTask(index) {
       const task = todoList[index];
-      const newName = prompt("Edit task name:", task.name);
-      const newTime = prompt("Edit time (HH:MM):", task.time);
-      const newDate = prompt("Edit date (YYYY-MM-DD):", task.date);
-      const newPriority = prompt("Edit priority (High/Medium/Low):", task.priority);
+      document.getElementById("editTaskName").value = task.name;
+      document.getElementById("editTaskTime").value = task.time;
+      document.getElementById("editTaskDate").value = task.date;
+      document.getElementById("editTaskPriority").value = task.priority;
+      currentEditIndex = index;
+      new bootstrap.Modal(document.getElementById("editModal")).show();
+    }
 
-      if (newName && newTime && newDate && newPriority) {
-        todoList[index] = {
-          name: newName,
-          time: newTime,
-          date: newDate,
-          priority: newPriority,
-          done: false,
-          alerted: false // reset on edit
-        };
-        localStorage.setItem('todoList', JSON.stringify(todoList));
-        renderHTML();
+    function saveEdit() {
+      if (currentEditIndex === null) return;
+      const task = todoList[currentEditIndex];
+      task.name = document.getElementById("editTaskName").value;
+      task.time = document.getElementById("editTaskTime").value;
+      task.date = document.getElementById("editTaskDate").value;
+      task.priority = document.getElementById("editTaskPriority").value;
+      localStorage.setItem("todoList", JSON.stringify(todoList));
+      renderHTML();
+      bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
+    }
+
+    function showReminder(taskName) {
+      document.getElementById("toastText").innerText = `⏰ Reminder: ${taskName}`;
+      new bootstrap.Toast(document.getElementById("toastAlert")).show();
+      document.getElementById("reminderSound").play().catch(() => {});
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(`Reminder: ${taskName}`, {
+          body: "It's time for your task!",
+          icon: "https://cdn-icons-png.flaticon.com/512/747/747310.png"
+        });
       }
     }
 
-    function showToast(taskName) {
-      document.getElementById("toastText").innerText = `⏰ Reminder: ${taskName}`;
-      const toastElement = new bootstrap.Toast(document.getElementById('toastAlert'));
-      toastElement.show();
-      document.getElementById("reminderSound").play();
-    }
-
-    // 🔔 Check every 10 seconds for due tasks (within last 2 min)
     setInterval(() => {
-      const now = new Date().getTime();
+      const now = new Date();
       todoList.forEach((task, i) => {
         if (!task.alerted && task.time && task.date) {
-          const taskTime = new Date(`${task.date}T${task.time}`).getTime();
-          const diff = now - taskTime;
-          if (diff >= 0 && diff <= 2 * 60 * 1000) {
-            showToast(task.name);
+          const taskTime = new Date(`${task.date}T${task.time}`);
+          if (Math.abs(now - taskTime) < 120000) {
+            showReminder(task.name);
             task.alerted = true;
-            localStorage.setItem('todoList', JSON.stringify(todoList));
           }
         }
       });
-    }, 10000); // every 10 sec
+      localStorage.setItem("todoList", JSON.stringify(todoList));
+    }, 10000);
+
+    document.getElementById("toggleDarkMode").onclick = () => {
+      document.body.classList.toggle("dark-mode");
+    };
+
+    document.addEventListener("click", () => {
+      const sound = document.getElementById("reminderSound");
+      sound.play().then(() => {
+        sound.pause();
+        sound.currentTime = 0;
+      }).catch(() => {});
+    }, { once: true });
 
     window.onload = renderHTML;
   </script>
 </body>
-
 </html>
