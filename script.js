@@ -1,3 +1,4 @@
+// ✅ Full updated script.js with OneSignal playerId push logic
 const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
 let currentEditIndex = null;
 
@@ -108,28 +109,30 @@ setInterval(() => checkReminders(), 10000);
 function checkReminders() {
   const now = new Date();
   let found = false;
+  const playerId = localStorage.getItem("playerId");
 
   todoList.forEach((task) => {
     if (!task.alerted && task.time && task.date) {
       const taskTime = new Date(`${task.date}T${task.time}`);
       if (taskTime <= now && (now - taskTime) <= 60000) {
-        // Show toast and sound
         document.getElementById("webToastText").innerText = `⏰ Reminder: ${task.name}`;
         new bootstrap.Toast(document.getElementById("webToast")).show();
         document.getElementById("reminderSound").play().catch(() => {});
 
-        // 🔔 Push to backend server (OneSignal)
-        fetch("https://todo-notifier.onrender.com/send-notification", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: `⏰ Reminder: ${task.name}`,
-            message: "Your task is due now!",
-          }),
-        })
-        .then(res => res.json())
-        .then(data => console.log("✅ Push sent:", data))
-        .catch(err => console.error("❌ Push failed:", err));
+        if (playerId) {
+          fetch("https://todo-notifier.onrender.com/send-notification", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              title: `⏰ Reminder: ${task.name}`,
+              message: "Your task is due now!",
+              playerId: playerId
+            }),
+          })
+            .then(res => res.json())
+            .then(data => console.log("✅ Push sent:", data))
+            .catch(err => console.error("❌ Push failed:", err));
+        }
 
         task.alerted = true;
         found = true;
@@ -167,9 +170,11 @@ window.onload = () => {
   } else {
     icon.textContent = "🌙";
   }
+
   if ("Notification" in window && Notification.permission !== "granted") {
     Notification.requestPermission();
   }
+
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js");
   }
