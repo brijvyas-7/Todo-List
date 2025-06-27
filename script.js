@@ -2,6 +2,16 @@
 const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
 let currentEditIndex = null;
 
+
+fetch("https://todo-notifier.onrender.com/send-notification", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    title: "⏰ Reminder",
+    message: `Task: ${task.name} is due now!`,
+  }),
+});
+
 // Unlock audio on first interaction
 document.addEventListener("click", () => {
   const audio = document.getElementById("reminderSound");
