@@ -1,4 +1,4 @@
-const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
+""const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
 let currentEditIndex = null;
 
 // Unlock audio on first interaction
@@ -103,8 +103,12 @@ function saveEdit() {
 }
 
 // 🔁 Reminder check loop every 10 seconds
-setInterval(() => {
+setInterval(() => checkReminders(), 10000);
+
+function checkReminders() {
   const now = new Date();
+  let found = false;
+
   todoList.forEach((task) => {
     if (!task.alerted && task.time && task.date) {
       const taskTime = new Date(`${task.date}T${task.time}`);
@@ -128,12 +132,19 @@ setInterval(() => {
         .catch(err => console.error("❌ Push failed:", err));
 
         task.alerted = true;
+        found = true;
       }
     }
   });
+
   localStorage.setItem("todoList", JSON.stringify(todoList));
   renderHTML();
-}, 10000);
+
+  if (!found) {
+    document.getElementById("webToastText").innerText = "✅ No pending reminders.";
+    new bootstrap.Toast(document.getElementById("webToast")).show();
+  }
+}
 
 // 🌗 Dark Mode toggle
 const darkToggle = document.getElementById("toggleDarkModeSwitch");
@@ -163,43 +174,3 @@ window.onload = () => {
     navigator.serviceWorker.register("sw.js");
   }
 };
-
-function checkReminders() {
-  const now = new Date();
-  let found = false;
-
-  todoList.forEach((task) => {
-    if (!task.alerted && task.time && task.date) {
-      const taskTime = new Date(`${task.date}T${task.time}`);
-      if (taskTime <= now && (now - taskTime) <= 60000) {
-        // Show toast
-        document.getElementById("webToastText").innerText = `⏰ Reminder: ${task.name}`;
-        new bootstrap.Toast(document.getElementById("webToast")).show();
-        document.getElementById("reminderSound").play().catch(() => {});
-        task.alerted = true;
-        found = true;
-
-        // Send OneSignal push
-        fetch("https://todo-notifier.onrender.com/send-notification", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title: `⏰ Reminder: ${task.name}`,
-            message: "Your task is due now!",
-          }),
-        }).then(res => res.json())
-          .then(data => console.log("✅ Manual push sent:", data))
-          .catch(err => console.error("❌ Manual push failed:", err));
-      }
-    }
-  });
-
-  localStorage.setItem("todoList", JSON.stringify(todoList));
-  renderHTML();
-
-  if (!found) {
-    document.getElementById("webToastText").innerText = "✅ No pending reminders.";
-    new bootstrap.Toast(document.getElementById("webToast")).show();
-  }
-}
-
