@@ -1,8 +1,7 @@
-// ✅ Full updated script.js with OneSignal playerId push logic
 const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
 let currentEditIndex = null;
 
-// Unlock audio on first interaction
+// ✅ Unlock audio on first interaction
 document.addEventListener("click", () => {
   const audio = document.getElementById("reminderSound");
   audio.play().then(() => {
@@ -11,6 +10,7 @@ document.addEventListener("click", () => {
   }).catch(() => {});
 }, { once: true });
 
+// ✅ Add new task
 function addInput() {
   const inputEl = document.querySelector(".js-array");
   const timeEl = document.querySelector(".time-todo");
@@ -33,13 +33,16 @@ function addInput() {
   renderHTML();
 }
 
+// ✅ Render all tasks
 function renderHTML() {
   const container = document.querySelector(".todoAdded");
   container.innerHTML = "";
+
   todoList.forEach((task, index) => {
     const badgeClass = task.priority === 'High' ? 'bg-danger' :
                       task.priority === 'Medium' ? 'bg-warning text-dark' : 'bg-success';
     const timeLeft = getTimeLeft(task.date, task.time);
+
     container.innerHTML += `
       <div class="card mb-3">
         <div class="card-body d-flex justify-content-between align-items-center">
@@ -69,18 +72,21 @@ function getTimeLeft(date, time) {
   return `${hours}h ${minutes}m left`;
 }
 
+// ✅ Complete task
 function toggleComplete(index) {
   todoList[index].completed = !todoList[index].completed;
   localStorage.setItem("todoList", JSON.stringify(todoList));
   renderHTML();
 }
 
+// ✅ Delete task
 function deleteTodo(index) {
   todoList.splice(index, 1);
   localStorage.setItem("todoList", JSON.stringify(todoList));
   renderHTML();
 }
 
+// ✅ Edit task
 function editTask(index) {
   const task = todoList[index];
   document.getElementById("editTaskName").value = task.name;
@@ -91,6 +97,7 @@ function editTask(index) {
   new bootstrap.Modal(document.getElementById("editModal")).show();
 }
 
+// ✅ Save edited task
 function saveEdit() {
   if (currentEditIndex === null) return;
   const task = todoList[currentEditIndex];
@@ -103,15 +110,16 @@ function saveEdit() {
   bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
 }
 
-// 🔁 Reminder check loop every 10 seconds
+// ✅ Check reminders every 10s
 setInterval(() => checkReminders(), 10000);
 
+// ✅ Reminder Checker
 function checkReminders() {
   const now = new Date();
-  let found = false;
   const playerId = localStorage.getItem("playerId");
+  let found = false;
 
-  todoList.forEach((task) => {
+  todoList.forEach(task => {
     if (!task.alerted && task.time && task.date) {
       const taskTime = new Date(`${task.date}T${task.time}`);
       if (taskTime <= now && (now - taskTime) <= 60000) {
@@ -119,6 +127,7 @@ function checkReminders() {
         new bootstrap.Toast(document.getElementById("webToast")).show();
         document.getElementById("reminderSound").play().catch(() => {});
 
+        // ✅ Send push to backend (if player ID is ready)
         if (playerId) {
           fetch("https://todo-notifier.onrender.com/send-notification", {
             method: "POST",
@@ -129,9 +138,9 @@ function checkReminders() {
               playerId: playerId
             }),
           })
-            .then(res => res.json())
-            .then(data => console.log("✅ Push sent:", data))
-            .catch(err => console.error("❌ Push failed:", err));
+          .then(res => res.json())
+          .then(data => console.log("✅ Push sent:", data))
+          .catch(err => console.error("❌ Push failed:", err));
         }
 
         task.alerted = true;
@@ -144,12 +153,11 @@ function checkReminders() {
   renderHTML();
 
   if (!found) {
-    document.getElementById("webToastText").innerText = "✅ No pending reminders.";
-    new bootstrap.Toast(document.getElementById("webToast")).show();
+    console.log("✅ No due tasks at this check.");
   }
 }
 
-// 🌗 Dark Mode toggle
+// 🌗 Dark Mode
 const darkToggle = document.getElementById("toggleDarkModeSwitch");
 const icon = document.querySelector(".slider .icon");
 
@@ -159,9 +167,11 @@ darkToggle.addEventListener("change", function () {
   icon.textContent = this.checked ? "☀️" : "🌙";
 });
 
-// 🔃 On Load
+// 🚀 On Load
 window.onload = () => {
   renderHTML();
+
+  // Load dark mode preference
   const savedTheme = localStorage.getItem("darkMode") === "true";
   if (savedTheme) {
     document.body.classList.add("dark-mode");
@@ -171,11 +181,15 @@ window.onload = () => {
     icon.textContent = "🌙";
   }
 
+  // Ask for notification permission
   if ("Notification" in window && Notification.permission !== "granted") {
     Notification.requestPermission();
   }
 
+  // Register service worker
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js");
+    navigator.serviceWorker.register("sw.js")
+      .then(reg => console.log("✅ SW registered:", reg.scope))
+      .catch(err => console.warn("❌ SW registration failed:", err));
   }
 };
