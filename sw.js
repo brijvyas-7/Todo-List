@@ -1,21 +1,13 @@
-
-const cacheName = 'todo-pwa-v1';
-const filesToCache = [
-  './', './index.html', './manifest.json', './icon-192.png', './icon-512.png'
-];
-
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(cacheName).then(cache => {
-      return cache.addAll(filesToCache);
-    })
-  );
+self.addEventListener('install', (event) => {
+  console.log('[Service Worker] Installed');
+  self.skipWaiting(); // Activate the SW immediately after install
 });
 
-self.addEventListener('fetch', e => {
-  e.respondWith(
-    caches.match(e.request).then(response => {
-      return response || fetch(e.request);
-    })
-  );
+self.addEventListener('activate', (event) => {
+  console.log('[Service Worker] Activated');
+  return self.clients.claim(); // Claim control of all clients
+});
+
+self.addEventListener('fetch', (event) => {
+  event.respondWith(fetch(event.request));
 });
