@@ -19,18 +19,22 @@
 
   <!-- ✅ OneSignal Push Notification SDK -->
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
-  <script>
-    window.OneSignal = window.OneSignal || [];
-    OneSignal.push(function () {
-      OneSignal.init({
-        appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c",
-        notifyButton: {
-          enable: true
-        },
-        allowLocalhostAsSecureOrigin: true
-      });
+  <!-- ✅ OneSignal SDK -->
+<script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
+<script>
+  window.OneSignal = window.OneSignal || [];
+  OneSignal.push(function () {
+    OneSignal.init({
+      appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c", // replace this
+      safari_web_id: "OPTIONAL_IF_IOS_WEB_PUSH",
+      notifyButton: {
+        enable: true, // Bell UI
+      },
+      allowLocalhostAsSecureOrigin: true, // for local testing
     });
-  </script>
+  });
+</script>
+
 
   <style>
     body.dark-mode {
