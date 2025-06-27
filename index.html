@@ -17,21 +17,30 @@
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 
-  <!-- ✅ OneSignal Push Notification SDK -->
-  <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
+ 
+  <!-- ✅ OneSignal SDK -->
+<script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
 <script>
   window.OneSignal = window.OneSignal || [];
   OneSignal.push(function () {
     OneSignal.init({
-      appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c", // replace this
-      safari_web_id: "OPTIONAL_IF_IOS_WEB_PUSH",
+      appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c",
       notifyButton: {
-        enable: true, // Bell UI
+        enable: true,
       },
-      allowLocalhostAsSecureOrigin: true, // for local testing
+      allowLocalhostAsSecureOrigin: true,
+    });
+
+    // 🔑 Save playerId to localStorage for backend use
+    OneSignal.getUserId(function(playerId) {
+      if (playerId) {
+        console.log("📲 OneSignal playerId:", playerId);
+        localStorage.setItem("playerId", playerId);
+      }
     });
   });
 </script>
+
 
 
   <style>
