@@ -1,14 +1,14 @@
-// Updated script.js with persistent notification loop
+// Updated script.js with persistent notification loop using OneSignal only
 const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
 let currentEditIndex = null;
 
-// Unlock audio on first interaction without actually playing it
+// Unlock audio on first interaction
 document.addEventListener("click", () => {
   const audio = document.getElementById("reminderSound");
   audio.play().then(() => {
     audio.pause();
     audio.currentTime = 0;
-  }).catch(() => {});
+  }).catch(() => { });
 }, { once: true });
 
 function addInput() {
@@ -118,13 +118,14 @@ function saveEdit() {
   bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
 }
 
-// Persistent notification checker
-setInterval(() => {
+// Manual reminder checker (used via 🔔 UI button)
+function checkReminders() {
   const now = new Date();
+  let reminded = false;
   todoList.forEach((task, i) => {
     if (!task.alerted && task.time && task.date) {
       const taskTime = new Date(`${task.date}T${task.time}`);
-      if (!task.alerted && taskTime <= now && (now - taskTime) <= 60000) {
+      if (taskTime <= now && (now - taskTime) <= 60000) {
         if (Notification.permission === "granted") {
           new Notification(`Reminder: ${task.name}`, {
             body: "Your task is due now!",
@@ -135,19 +136,25 @@ setInterval(() => {
         }
         document.getElementById("webToastText").innerText = `⏰ Reminder: ${task.name}`;
         new bootstrap.Toast(document.getElementById("webToast")).show();
-        document.getElementById("reminderSound").play().catch(() => {});
+        document.getElementById("reminderSound").play().catch(() => { });
         task.alerted = true;
+        reminded = true;
       }
     }
   });
+  if (!reminded) {
+    document.getElementById("webToastText").innerText = "✅ No tasks due right now.";
+    new bootstrap.Toast(document.getElementById("webToast")).show();
+  }
   try {
     localStorage.setItem("todoList", JSON.stringify(todoList));
   } catch (e) {
     console.warn("⚠️ Reminder status could not be saved. Storage may be full.");
   }
   renderHTML();
-}, 10000);
+}
 
+// Dark mode toggle
 const darkToggle = document.getElementById("toggleDarkModeSwitch");
 const icon = document.querySelector(".slider .icon");
 
@@ -155,28 +162,6 @@ darkToggle.addEventListener("change", function () {
   document.body.classList.toggle("dark-mode");
   localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
   icon.textContent = this.checked ? "☀️" : "🌙";
-});
-
-const pushToggle = document.getElementById("togglePushSwitch");
-
-pushToggle.addEventListener("change", function () {
-  if (this.checked) {
-    Notification.requestPermission().then(permission => {
-      if (permission === "granted") {
-        new Notification("🔔 Push Enabled", {
-          body: "You’ll now receive task reminders!",
-          icon: "icon-192.png"
-        });
-        localStorage.setItem("pushEnabled", "true");
-      } else {
-        this.checked = false;
-        localStorage.setItem("pushEnabled", "false");
-        alert("Notification permission denied.");
-      }
-    });
-  } else {
-    localStorage.setItem("pushEnabled", "false");
-  }
 });
 
 window.onload = () => {
@@ -189,14 +174,14 @@ window.onload = () => {
   } else {
     icon.textContent = "🌙";
   }
-  const pushPref = localStorage.getItem("pushEnabled") === "true";
-  document.getElementById("togglePushSwitch").checked = pushPref;
 };
 
+// Ask for notification permission if not already granted
 if ("Notification" in window && Notification.permission !== "granted") {
   Notification.requestPermission();
 }
 
+// Register PWA service worker if available
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js");
 }
