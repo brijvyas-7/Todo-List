@@ -1,16 +1,5 @@
-// Updated script.js with persistent notification loop using OneSignal only
 const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
 let currentEditIndex = null;
-
-
-fetch("https://todo-notifier.onrender.com/send-notification", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    title: "⏰ Reminder",
-    message: `Task: ${task.name} is due now!`,
-  }),
-});
 
 // Unlock audio on first interaction
 document.addEventListener("click", () => {
@@ -18,7 +7,7 @@ document.addEventListener("click", () => {
   audio.play().then(() => {
     audio.pause();
     audio.currentTime = 0;
-  }).catch(() => { });
+  }).catch(() => {});
 }, { once: true });
 
 function addInput() {
@@ -34,11 +23,7 @@ function addInput() {
   if (!name || !time || !date) return alert("Please fill out all fields.");
 
   todoList.push({ name, time, date, priority, alerted: false, completed: false });
-  try {
-    localStorage.setItem("todoList", JSON.stringify(todoList));
-  } catch (e) {
-    alert("🚫 Storage full! Please clear some old tasks.");
-  }
+  localStorage.setItem("todoList", JSON.stringify(todoList));
 
   inputEl.value = "";
   timeEl.value = "";
@@ -51,7 +36,8 @@ function renderHTML() {
   const container = document.querySelector(".todoAdded");
   container.innerHTML = "";
   todoList.forEach((task, index) => {
-    const badgeClass = task.priority === 'High' ? 'bg-danger' : task.priority === 'Medium' ? 'bg-warning text-dark' : 'bg-success';
+    const badgeClass = task.priority === 'High' ? 'bg-danger' :
+                      task.priority === 'Medium' ? 'bg-warning text-dark' : 'bg-success';
     const timeLeft = getTimeLeft(task.date, task.time);
     container.innerHTML += `
       <div class="card mb-3">
@@ -84,21 +70,13 @@ function getTimeLeft(date, time) {
 
 function toggleComplete(index) {
   todoList[index].completed = !todoList[index].completed;
-  try {
-    localStorage.setItem("todoList", JSON.stringify(todoList));
-  } catch (e) {
-    alert("🚫 Unable to save completion status. Storage might be full.");
-  }
+  localStorage.setItem("todoList", JSON.stringify(todoList));
   renderHTML();
 }
 
 function deleteTodo(index) {
   todoList.splice(index, 1);
-  try {
-    localStorage.setItem("todoList", JSON.stringify(todoList));
-  } catch (e) {
-    alert("⚠️ Failed to delete task due to full storage.");
-  }
+  localStorage.setItem("todoList", JSON.stringify(todoList));
   renderHTML();
 }
 
@@ -119,52 +97,45 @@ function saveEdit() {
   task.time = document.getElementById("editTaskTime").value;
   task.date = document.getElementById("editTaskDate").value;
   task.priority = document.getElementById("editTaskPriority").value;
-  try {
-    localStorage.setItem("todoList", JSON.stringify(todoList));
-  } catch (e) {
-    alert("⚠️ Couldn't save changes. You may be out of storage space.");
-  }
+  localStorage.setItem("todoList", JSON.stringify(todoList));
   renderHTML();
   bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
 }
 
-// Manual reminder checker (used via 🔔 UI button)
-function checkReminders() {
+// 🔁 Reminder check loop every 10 seconds
+setInterval(() => {
   const now = new Date();
-  let reminded = false;
-  todoList.forEach((task, i) => {
+  todoList.forEach((task) => {
     if (!task.alerted && task.time && task.date) {
       const taskTime = new Date(`${task.date}T${task.time}`);
       if (taskTime <= now && (now - taskTime) <= 60000) {
-        if (Notification.permission === "granted") {
-          new Notification(`Reminder: ${task.name}`, {
-            body: "Your task is due now!",
-            icon: "icon-192.png"
-          });
-        } else {
-          alert(`🔔 Reminder: ${task.name}`);
-        }
+        // Show toast and sound
         document.getElementById("webToastText").innerText = `⏰ Reminder: ${task.name}`;
         new bootstrap.Toast(document.getElementById("webToast")).show();
-        document.getElementById("reminderSound").play().catch(() => { });
+        document.getElementById("reminderSound").play().catch(() => {});
+
+        // 🔔 Push to backend server (OneSignal)
+        fetch("https://todo-notifier.onrender.com/send-notification", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: `⏰ Reminder: ${task.name}`,
+            message: "Your task is due now!",
+          }),
+        })
+        .then(res => res.json())
+        .then(data => console.log("✅ Push sent:", data))
+        .catch(err => console.error("❌ Push failed:", err));
+
         task.alerted = true;
-        reminded = true;
       }
     }
   });
-  if (!reminded) {
-    document.getElementById("webToastText").innerText = "✅ No tasks due right now.";
-    new bootstrap.Toast(document.getElementById("webToast")).show();
-  }
-  try {
-    localStorage.setItem("todoList", JSON.stringify(todoList));
-  } catch (e) {
-    console.warn("⚠️ Reminder status could not be saved. Storage may be full.");
-  }
+  localStorage.setItem("todoList", JSON.stringify(todoList));
   renderHTML();
-}
+}, 10000);
 
-// Dark mode toggle
+// 🌗 Dark Mode toggle
 const darkToggle = document.getElementById("toggleDarkModeSwitch");
 const icon = document.querySelector(".slider .icon");
 
@@ -174,6 +145,7 @@ darkToggle.addEventListener("change", function () {
   icon.textContent = this.checked ? "☀️" : "🌙";
 });
 
+// 🔃 On Load
 window.onload = () => {
   renderHTML();
   const savedTheme = localStorage.getItem("darkMode") === "true";
@@ -184,14 +156,10 @@ window.onload = () => {
   } else {
     icon.textContent = "🌙";
   }
+  if ("Notification" in window && Notification.permission !== "granted") {
+    Notification.requestPermission();
+  }
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js");
+  }
 };
-
-// Ask for notification permission if not already granted
-if ("Notification" in window && Notification.permission !== "granted") {
-  Notification.requestPermission();
-}
-
-// Register PWA service worker if available
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js");
-}
