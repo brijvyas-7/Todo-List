@@ -1,4 +1,4 @@
-""const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
+const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
 let currentEditIndex = null;
 
 // Unlock audio on first interaction
