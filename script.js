@@ -7,10 +7,10 @@ document.addEventListener("click", () => {
   audio.play().then(() => {
     audio.pause();
     audio.currentTime = 0;
-  }).catch(() => { });
+  }).catch(() => {});
 }, { once: true });
 
-async function addInput() {
+function addInput() {
   const inputEl = document.querySelector(".js-array");
   const timeEl = document.querySelector(".time-todo");
   const dateEl = document.querySelector(".todo-date");
@@ -22,36 +22,31 @@ async function addInput() {
   const playerId = localStorage.getItem("playerId");
 
   if (!name || !time || !date) return alert("Please fill out all fields.");
-  if (!playerId) return alert("OneSignal is not ready yet. Please wait and try again.");
 
-  const task = { name, time, date, priority };
-
-  // Save locally
-  todoList.push({ ...task, alerted: false, completed: false });
+  const taskData = { name, time, date, priority, alerted: false, completed: false, playerId };
+  todoList.push(taskData);
   localStorage.setItem("todoList", JSON.stringify(todoList));
-  renderHTML();
 
-  // Clear UI
+  // 🔁 Save to backend
+  fetch("https://todo-notifier.onrender.com/save-task", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(taskData),
+  })
+    .then(res => res.json())
+    .then(data => {
+      console.log("✅ Task saved to Firestore:", data);
+    })
+    .catch(err => {
+      console.error("❌ Failed to save task to backend:", err);
+    });
+
   inputEl.value = "";
   timeEl.value = "";
   dateEl.value = "";
 
-  // Send to backend
-  try {
-    const res = await fetch("https://todo-notifier.onrender.com/save-task", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...task, playerId }),
-    });
-
-    const json = await res.json();
-    console.log("✅ Task saved to Firestore:", json);
-  } catch (err) {
-    console.error("❌ Failed to save task to backend:", err);
-    alert("Task saved locally, but failed to sync to cloud.");
-  }
+  renderHTML();
 }
-
 
 function renderHTML() {
   const container = document.querySelector(".todoAdded");
@@ -59,7 +54,7 @@ function renderHTML() {
 
   todoList.forEach((task, index) => {
     const badgeClass = task.priority === 'High' ? 'bg-danger' :
-      task.priority === 'Medium' ? 'bg-warning text-dark' : 'bg-success';
+                      task.priority === 'Medium' ? 'bg-warning text-dark' : 'bg-success';
     const timeLeft = getTimeLeft(task.date, task.time);
 
     container.innerHTML += `
@@ -127,7 +122,6 @@ function saveEdit() {
 
 function checkReminders() {
   const now = new Date();
-  const playerId = localStorage.getItem("playerId");
   let found = false;
 
   todoList.forEach(task => {
@@ -136,23 +130,7 @@ function checkReminders() {
       if (taskTime <= now && (now - taskTime) <= 60000) {
         document.getElementById("webToastText").innerText = `⏰ Reminder: ${task.name}`;
         new bootstrap.Toast(document.getElementById("webToast")).show();
-        document.getElementById("reminderSound").play().catch(() => { });
-
-        if (playerId) {
-          fetch("https://todo-notifier.onrender.com/send-notification", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              title: `⏰ Reminder: ${task.name}`,
-              message: "Your task is due now!",
-              playerId: playerId
-            }),
-          })
-            .then(res => res.json())
-            .then(data => console.log("✅ Push sent:", data))
-            .catch(err => console.error("❌ Push failed:", err));
-        }
-
+        document.getElementById("reminderSound").play().catch(() => {});
         task.alerted = true;
         found = true;
       }
@@ -200,3 +178,6 @@ window.onload = () => {
       .catch(err => console.warn("❌ SW registration failed:", err));
   }
 };
+
+// 🔁 Reminder loop
+setInterval(checkReminders, 10000);
