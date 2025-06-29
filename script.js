@@ -1,8 +1,9 @@
+// ✅ Local storage based task list
 const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
 let currentEditIndex = null;
 
-// Unlock audio on first interaction
-document.addEventListener("click", () => {
+// 🔊 Unlock audio on first click
+addEventListener("click", () => {
   const audio = document.getElementById("reminderSound");
   audio.play().then(() => {
     audio.pause();
@@ -15,7 +16,6 @@ function addInput() {
   const timeEl = document.querySelector(".time-todo");
   const dateEl = document.querySelector(".todo-date");
   const priority = document.querySelector(".todo-priority").value;
-
   const name = inputEl.value.trim();
   const time = timeEl.value;
   const date = dateEl.value;
@@ -27,19 +27,14 @@ function addInput() {
   todoList.push(taskData);
   localStorage.setItem("todoList", JSON.stringify(todoList));
 
-  // 🔁 Save to backend
   fetch("https://todo-notifier.onrender.com/save-task", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(taskData),
   })
     .then(res => res.json())
-    .then(data => {
-      console.log("✅ Task saved to Firestore:", data);
-    })
-    .catch(err => {
-      console.error("❌ Failed to save task to backend:", err);
-    });
+    .then(data => console.log("✅ Task saved to Firestore:", data))
+    .catch(err => console.error("❌ Failed to save task to backend:", err));
 
   inputEl.value = "";
   timeEl.value = "";
@@ -120,51 +115,6 @@ function saveEdit() {
   bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
 }
 
-
-  document.addEventListener("DOMContentLoaded", () => {
-    const statusText = document.getElementById("notifStatus");
-    const toggleBtn = document.getElementById("toggleNotifBtn");
-    const testBtn = document.getElementById("testNotifBtn");
-
-    function updateNotifStatus() {
-      OneSignal.isPushNotificationsEnabled().then(enabled => {
-        statusText.textContent = enabled ? "✅ Subscribed" : "❌ Not Subscribed";
-        toggleBtn.textContent = enabled ? "🔕 Unsubscribe" : "🔔 Subscribe";
-      });
-    }
-
-    toggleBtn.addEventListener("click", () => {
-      OneSignal.isPushNotificationsEnabled().then(enabled => {
-        if (enabled) {
-          OneSignal.setSubscription(false).then(updateNotifStatus);
-        } else {
-          OneSignal.registerForPushNotifications().then(updateNotifStatus);
-        }
-      });
-    });
-
-    testBtn.addEventListener("click", () => {
-      OneSignal.sendSelfNotification(
-        "📌 Test Notification",
-        "This is a local test notification from Todo PWA!",
-        null, // URL
-        null  // icon
-      );
-    });
-
-    // Refresh on modal open
-    document.getElementById("notificationModal").addEventListener("show.bs.modal", updateNotifStatus);
-  });
-
-
-  localStorage.setItem("todoList", JSON.stringify(todoList));
-  renderHTML();
-
-  if (!found) {
-    console.log("✅ No due tasks at this check.");
-  }
-}
-
 // 🌗 Dark Mode
 const darkToggle = document.getElementById("toggleDarkModeSwitch");
 const icon = document.querySelector(".slider .icon");
@@ -175,7 +125,6 @@ darkToggle.addEventListener("change", function () {
   icon.textContent = this.checked ? "☀️" : "🌙";
 });
 
-// 🚀 On Load
 window.onload = () => {
   renderHTML();
 
@@ -198,6 +147,3 @@ window.onload = () => {
       .catch(err => console.warn("❌ SW registration failed:", err));
   }
 };
-
-// 🔁 Reminder loop
-setInterval(checkReminders, 10000);
