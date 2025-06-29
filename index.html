@@ -16,39 +16,28 @@
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 
-  <!-- ✅ SDK v16 -->
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function (OneSignal) {
-    try {
-      await OneSignal.init({
-        appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c",
-        safari_web_id: "web.onesignal.auto.Todo-PWA", // Optional, for Safari
+    <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
+  <script>
+    window.OneSignal = window.OneSignal || [];
+    OneSignal.push(function () {
+      OneSignal.init({
+        appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c", // ✅ Use your App ID
         notifyButton: { enable: true },
-        allowLocalhostAsSecureOrigin: true,
+        allowLocalhostAsSecureOrigin: true
       });
 
-      const permission = await OneSignal.User.PushSubscription.getPermission();
-      console.log("🔐 Notification permission:", permission);
-
-      if (permission !== 'granted') {
-        await OneSignal.User.PushSubscription.request();
-      }
-
-      const playerId = await OneSignal.User.getId();
-      if (playerId) {
-        console.log("📲 OneSignal Player ID:", playerId);
-        localStorage.setItem("playerId", playerId);
-      } else {
-        console.warn("⚠️ Player ID not available yet.");
-      }
-    } catch (err) {
-      console.error("❌ OneSignal init error:", err);
-    }
-  });
-</script>
+      OneSignal.on('subscriptionChange', async function (isSubscribed) {
+        if (isSubscribed) {
+          const playerId = await OneSignal.getUserId();
+          console.log("📲 OneSignal Player ID:", playerId);
+          localStorage.setItem("playerId", playerId);
+        } else {
+          console.warn("⚠️ User not subscribed to notifications");
+          localStorage.removeItem("playerId");
+        }
+      });
+    });
+  </script>
 
   <style>
     body.dark-mode {
