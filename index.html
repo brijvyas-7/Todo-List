@@ -30,7 +30,7 @@
       });
 
       // ✅ Request permission if not granted
-      const permission = await OneSignal.Notification.permission;
+      const permission = await OneSignal.Notifications.permissionLevel();
       console.log("🔔 Permission status:", permission);
 
       // ✅ Get player ID after permission is granted
