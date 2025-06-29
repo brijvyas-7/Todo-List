@@ -24,16 +24,16 @@
     OneSignalDeferred.push(async function (OneSignal) {
       await OneSignal.init({
         appId: "6e6b5152-74f1-497f-9c11-d3b69830f7a2", // ✅ Your OneSignal App ID
-        safari_web_id: "web.onesignal.auto.Todo-PWA", // 🔁 Replace this with real Safari Web ID
-        notifyButton: { enable: true },
+        safari_web_id: "web.onesignal.auto.Todo-PWA",
+        notifyButton: {
+          enable: true,
+        },
       });
 
-      // Store playerId
-      const id = await OneSignal.getUserId();
-      if (id) {
-        console.log("📲 OneSignal Player ID:", id);
-        localStorage.setItem("playerId", id);
-      }
+      // ✅ Correct new v16 way to get playerId
+      const playerId = await OneSignal.user.getId();
+      console.log("📲 OneSignal Player ID:", playerId);
+      localStorage.setItem("playerId", playerId);
     });
   </script>
 
