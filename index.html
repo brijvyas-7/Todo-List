@@ -19,25 +19,23 @@
 
   <!-- ✅ OneSignal SDK v16 -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-  <script>
+ <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function (OneSignal) {
     await OneSignal.init({
-      appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c", // ✅ Your real OneSignal App ID
-      safari_web_id: "web.onesignal.auto.Todo-PWA", // ✅ Replace with actual Safari Web ID
+      appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c", // ✅ Your real App ID
+      safari_web_id: "web.onesignal.YOUR_SAFARI_WEB_ID", // ✅ Replace with correct ID
       notifyButton: { enable: true },
     });
 
-    // ✅ Safely check if user is subscribed
-    const isPushEnabled = await OneSignal.isPushEnabled();
-    if (isPushEnabled) {
+    // ✅ New way in v16 to check permission and get playerId
+    const permission = await OneSignal.user.permission.get();
+    if (permission === "granted") {
       const playerId = await OneSignal.user.getId();
-      if (playerId) {
-        console.log("📲 OneSignal Player ID:", playerId);
-        localStorage.setItem("playerId", playerId);
-      }
+      console.log("📲 OneSignal Player ID:", playerId);
+      localStorage.setItem("playerId", playerId);
     } else {
-      console.warn("⚠️ User is not subscribed to push notifications.");
+      console.warn("🚫 Notifications not enabled:", permission);
     }
   });
 </script>
