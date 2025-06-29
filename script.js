@@ -120,22 +120,42 @@ function saveEdit() {
   bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
 }
 
-function checkReminders() {
-  const now = new Date();
-  let found = false;
 
-  todoList.forEach(task => {
-    if (!task.alerted && task.time && task.date) {
-      const taskTime = new Date(`${task.date}T${task.time}`);
-      if (taskTime <= now && (now - taskTime) <= 60000) {
-        document.getElementById("webToastText").innerText = `⏰ Reminder: ${task.name}`;
-        new bootstrap.Toast(document.getElementById("webToast")).show();
-        document.getElementById("reminderSound").play().catch(() => {});
-        task.alerted = true;
-        found = true;
-      }
+  document.addEventListener("DOMContentLoaded", () => {
+    const statusText = document.getElementById("notifStatus");
+    const toggleBtn = document.getElementById("toggleNotifBtn");
+    const testBtn = document.getElementById("testNotifBtn");
+
+    function updateNotifStatus() {
+      OneSignal.isPushNotificationsEnabled().then(enabled => {
+        statusText.textContent = enabled ? "✅ Subscribed" : "❌ Not Subscribed";
+        toggleBtn.textContent = enabled ? "🔕 Unsubscribe" : "🔔 Subscribe";
+      });
     }
+
+    toggleBtn.addEventListener("click", () => {
+      OneSignal.isPushNotificationsEnabled().then(enabled => {
+        if (enabled) {
+          OneSignal.setSubscription(false).then(updateNotifStatus);
+        } else {
+          OneSignal.registerForPushNotifications().then(updateNotifStatus);
+        }
+      });
+    });
+
+    testBtn.addEventListener("click", () => {
+      OneSignal.sendSelfNotification(
+        "📌 Test Notification",
+        "This is a local test notification from Todo PWA!",
+        null, // URL
+        null  // icon
+      );
+    });
+
+    // Refresh on modal open
+    document.getElementById("notificationModal").addEventListener("show.bs.modal", updateNotifStatus);
   });
+
 
   localStorage.setItem("todoList", JSON.stringify(todoList));
   renderHTML();
