@@ -18,30 +18,29 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 
   <!-- ✅ OneSignal SDK v16 -->
-  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-  <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function (OneSignal) {
-      try {
-        await OneSignal.init({
-          appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c", // ✅ Your real App ID
-          notifyButton: { enable: true }
-        });
+ <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function (OneSignal) {
+    try {
+      await OneSignal.init({
+        appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c", // ✅ Your OneSignal App ID
+        notifyButton: { enable: true },
+        safari_web_id: "web.onesignal.auto.Todo-PWA", // Optional for Safari if configured
+      });
 
-        const user = await OneSignal.User.get();
-        const playerId = user?.id;
-
-        if (playerId) {
-          console.log("📲 OneSignal Player ID:", playerId);
-          localStorage.setItem("playerId", playerId);
-        } else {
-          console.warn("❌ User is not subscribed to push notifications.");
-        }
-      } catch (e) {
-        console.error("❌ OneSignal init failed:", e);
+      const playerId = await OneSignal.getUserId(); // ✅ v16 method
+      if (playerId) {
+        console.log("📲 OneSignal Player ID:", playerId);
+        localStorage.setItem("playerId", playerId);
+      } else {
+        console.warn("❌ Not subscribed or permission denied.");
       }
-    });
-  </script>
+    } catch (err) {
+      console.error("❌ OneSignal init failed:", err);
+    }
+  });
+</script>
 
   <style>
     body.dark-mode { background-color: #121212; color: #fff; }
