@@ -147,3 +147,38 @@ window.onload = () => {
       .catch(err => console.warn("❌ SW registration failed:", err));
   }
 };
+function checkReminders() {
+  const now = new Date();
+  let found = false;
+
+  todoList.forEach((task, i) => {
+    if (task.alerted || task.completed) return;
+
+    const dueTime = new Date(`${task.date}T${task.time}`);
+    const diff = dueTime - now;
+
+    if (diff <= 60000 && diff >= 0) { // due within 1 min
+      found = true;
+      todoList[i].alerted = true;
+      localStorage.setItem("todoList", JSON.stringify(todoList));
+      showToast(`🔔 Reminder: ${task.name}`);
+      playReminderSound();
+    }
+  });
+
+  if (!found) {
+    console.log("✅ No due tasks at this check.");
+  }
+}
+
+function playReminderSound() {
+  const audio = document.getElementById("reminderSound");
+  audio.play().catch(() => {}); // skip if autoplay blocked
+}
+
+function showToast(msg) {
+  const toastText = document.getElementById("webToastText");
+  toastText.textContent = msg;
+  const toast = new bootstrap.Toast(document.getElementById("webToast"));
+  toast.show();
+}
