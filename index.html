@@ -20,17 +20,29 @@
   <!-- ✅ OneSignal SDK -->
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
   <script>
-    window.OneSignal = window.OneSignal || [];
-    OneSignal.push(function () {
-      OneSignal.init({
-        appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c",
-        notifyButton: { enable: true },
-        allowLocalhostAsSecureOrigin: true
-      });
-
-      OneSignal.getUserId(playerId => playerId && localStorage.setItem("playerId", playerId));
+  window.OneSignal = window.OneSignal || [];
+  OneSignal.push(function () {
+    OneSignal.init({
+      appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c",
+      notifyButton: { enable: true },
+      allowLocalhostAsSecureOrigin: true
     });
-  </script>
+
+    OneSignal.on('subscriptionChange', function (isSubscribed) {
+      if (isSubscribed) {
+        OneSignal.getUserId(function (playerId) {
+          if (playerId) {
+            localStorage.setItem("playerId", playerId);
+            const displayDiv = document.getElementById("playerIdDisplay");
+            if (displayDiv) displayDiv.style.display = "none"; // 👈 hide display
+          }
+        });
+      } else {
+        console.warn("❌ Not subscribed yet");
+      }
+    });
+  });
+</script>
 
   <style>
     body.dark-mode {
@@ -79,9 +91,6 @@
   <div class="container py-5 d-flex flex-column align-items-center">
     <h1 class="text-center mb-3">📝 To-Do List</h1>
     
-    <!-- ✅ Show Player ID -->
-    <div id="playerIdDisplay" class="text-center text-muted small"></div>
-
     <!-- Toggles -->
     <div class="d-flex align-items-center justify-content-center gap-4 mb-4">
       <label class="form-switch">
