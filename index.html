@@ -24,25 +24,28 @@
   OneSignalDeferred.push(async function (OneSignal) {
     try {
       await OneSignal.init({
-        appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c", // ✅ your real app ID
+        appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c",
+        safari_web_id: "web.onesignal.auto.Todo-PWA", // Optional, for Safari
         notifyButton: { enable: true },
         allowLocalhostAsSecureOrigin: true,
       });
 
-      // ✅ Request permission if not granted
-      const permission = await OneSignal.Notifications.permissionLevel();
-      console.log("🔔 Permission status:", permission);
+      const permission = await OneSignal.User.PushSubscription.getPermission();
+      console.log("🔐 Notification permission:", permission);
 
-      // ✅ Get player ID after permission is granted
-      const playerId = await OneSignal.user.getId(); // ✅ Works only after user subscribes
+      if (permission !== 'granted') {
+        await OneSignal.User.PushSubscription.request();
+      }
+
+      const playerId = await OneSignal.User.getId();
       if (playerId) {
-        console.log("📲 Player ID:", playerId);
+        console.log("📲 OneSignal Player ID:", playerId);
         localStorage.setItem("playerId", playerId);
       } else {
-        console.warn("⚠️ No player ID yet. User might not be subscribed.");
+        console.warn("⚠️ Player ID not available yet.");
       }
-    } catch (e) {
-      console.error("❌ OneSignal init error:", e);
+    } catch (err) {
+      console.error("❌ OneSignal init error:", err);
     }
   });
 </script>
