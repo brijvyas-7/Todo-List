@@ -28,11 +28,7 @@
         allowLocalhostAsSecureOrigin: true
       });
 
-      OneSignal.getUserId(function(playerId) {
-  if (playerId) {
-    localStorage.setItem("playerId", playerId);
-  }
-});
+      OneSignal.getUserId(playerId => playerId && localStorage.setItem("playerId", playerId));
     });
   </script>
 
