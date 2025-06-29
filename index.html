@@ -28,16 +28,11 @@
         allowLocalhostAsSecureOrigin: true
       });
 
-      OneSignal.getUserId(function (playerId) {
-        if (playerId) {
-          console.log("📲 OneSignal Player ID:", playerId);
-          localStorage.setItem("playerId", playerId);
-          document.getElementById("playerIdDisplay").innerText = "📲 Player ID: " + playerId;
-        } else {
-          console.warn("⚠️ Player ID not available yet.");
-          document.getElementById("playerIdDisplay").innerText = "⚠️ Player ID not available";
-        }
-      });
+      OneSignal.getUserId(function(playerId) {
+  if (playerId) {
+    localStorage.setItem("playerId", playerId);
+  }
+});
     });
   </script>
 
