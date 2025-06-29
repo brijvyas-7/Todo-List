@@ -19,30 +19,26 @@
 
   <!-- ✅ OneSignal SDK v16 -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
- <script>
+ <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function (OneSignal) {
-    const onesignal = OneSignal; // ✅ store reference
-
-    await onesignal.init({
-      appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c", // ✅ your actual OneSignal app ID
-      safari_web_id: "web.onesignal.auto.Todo-PWA",  // ✅ replace with actual Safari ID if needed
-      notifyButton: { enable: true },
+    await OneSignal.init({
+      appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c", // ✅ Replace with your App ID
+      notifyButton: { enable: true }
     });
 
-    try {
-      const permission = await onesignal.user?.permission?.get();
-      if (permission === "granted") {
-        const playerId = await onesignal.user.getId();
-        if (playerId) {
-          console.log("📲 OneSignal Player ID:", playerId);
-          localStorage.setItem("playerId", playerId);
-        }
-      } else {
-        console.warn("🚫 Notifications not granted:", permission);
+    const permission = await OneSignal.notifications.permissionNative();
+    console.log("🔐 Notification permission:", permission);
+
+    if (permission === "granted") {
+      const playerId = await OneSignal.user.id;
+      if (playerId) {
+        console.log("📲 OneSignal Player ID:", playerId);
+        localStorage.setItem("playerId", playerId);
       }
-    } catch (err) {
-      console.error("❌ Error accessing OneSignal user info:", err);
+    } else {
+      console.warn("🚫 Notifications not granted");
     }
   });
 </script>
