@@ -20,24 +20,28 @@
   <!-- ✅ OneSignal SDK v16 -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function (OneSignal) {
-      await OneSignal.init({
-        appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c", // ✅ Your App ID
-        safari_web_id: "web.onesignal.auto.Todo-PWA", // ⚠️ Replace with actual Safari Web ID from OneSignal
-        notifyButton: { enable: true },
-      });
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function (OneSignal) {
+    await OneSignal.init({
+      appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c", // ✅ Your real OneSignal App ID
+      safari_web_id: "web.onesignal.auto.Todo-PWA", // ✅ Replace with actual Safari Web ID
+      notifyButton: { enable: true },
+    });
 
-      // ✅ Store Player ID for backend
+    // ✅ Safely check if user is subscribed
+    const isPushEnabled = await OneSignal.isPushEnabled();
+    if (isPushEnabled) {
       const playerId = await OneSignal.user.getId();
       if (playerId) {
         console.log("📲 OneSignal Player ID:", playerId);
         localStorage.setItem("playerId", playerId);
-      } else {
-        console.warn("⚠️ Player not subscribed yet.");
       }
-    });
-  </script>
+    } else {
+      console.warn("⚠️ User is not subscribed to push notifications.");
+    }
+  });
+</script>
+
 
   <style>
     body.dark-mode {
