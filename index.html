@@ -19,26 +19,31 @@
 
   <!-- ✅ OneSignal SDK v16 -->
   <!-- ✅ OneSignal SDK v16 -->
+<!-- ✅ OneSignal SDK v16 -->
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
   window.OneSignalDeferred = window.OneSignalDeferred || [];
   OneSignalDeferred.push(async function (OneSignal) {
-    await OneSignal.init({
-      appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c", // ✅ Your actual App ID
-      notifyButton: { enable: true },
-    });
-
     try {
-      const pushEnabled = await OneSignal.isPushNotificationsEnabled();
-      if (pushEnabled) {
-        const userId = await OneSignal.getUserId(); // 🔄 v16 correct method
-        console.log("📲 OneSignal Player ID:", userId);
-        if (userId) localStorage.setItem("playerId", userId);
+      // ✅ Init the SDK
+      await OneSignal.init({
+        appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c", // ✅ YOUR app ID
+        notifyButton: { enable: true }
+      });
+
+      // ✅ Request permission (if not already granted)
+      const permission = await OneSignal.Notifications.permissionNative();
+      console.log("🔐 Permission status:", permission);
+
+      if (permission === 'granted') {
+        const playerId = await OneSignal.User.getId();
+        console.log("📲 Player ID:", playerId);
+        localStorage.setItem("playerId", playerId);
       } else {
-        console.warn("🚫 Push notifications not enabled by user.");
+        console.warn("🔕 User has not granted push permission.");
       }
-    } catch (err) {
-      console.error("❌ OneSignal init failed:", err);
+    } catch (e) {
+      console.error("❌ OneSignal init failed:", e);
     }
   });
 </script>
