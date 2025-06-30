@@ -87,20 +87,23 @@
     #playerIdDisplay { display: none; }
  .footer-animated {
   position: fixed;
-  bottom: 0;
+  bottom: 2px;
   width: 100%;
   padding: 8px 0;
   font-size: 0.85rem;
+  background: #f8f9fa;
+  color: #6c757d;
   text-align: center;
+  border-top: 1px solid #e0e0e0;
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
   z-index: 1000;
-  transition: background-color 0.3s ease, color 0.3s ease;
-  background-color: #f8f9fa;
-  color: #495057;
-  border-top: 1px solid #dee2e6;
 }
-
+.footer-animated:hover {
+  opacity: 1;
+}
 body.dark-mode .footer-animated {
-  background-color: #121212;
+  background: #1a1a1a;
   color: #ccc;
   border-top: 1px solid #333;
 }
