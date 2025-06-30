@@ -1,22 +1,26 @@
+// ✅ Save and load todo list
 const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
 let currentEditIndex = null;
 
-// 🔊 Unlock audio once
-document.addEventListener("click", () => {
-  const audio = document.getElementById("reminderSound");
-  audio?.play().then(() => {
-    audio.pause();
-    audio.currentTime = 0;
-  }).catch(() => {});
-}, { once: true });
+// 🔊 Unlock audio on first user interaction
+if (typeof window !== 'undefined') {
+  document.addEventListener("click", () => {
+    const audio = document.getElementById("reminderSound");
+    if (audio) {
+      audio.play().then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+      }).catch(() => {});
+    }
+  }, { once: true });
+}
 
-// ✅ Add Task
 function addInput() {
-  const name = document.querySelector(".js-array")?.value.trim();
-  const time = document.querySelector(".time-todo")?.value;
-  const date = document.querySelector(".todo-date")?.value;
-  const priority = document.querySelector(".todo-priority")?.value;
-  const playerId = localStorage.getItem("playerId");
+  const name = document.querySelector(".js-array").value.trim();
+  const time = document.querySelector(".time-todo").value;
+  const date = document.querySelector(".todo-date").value;
+  const priority = document.querySelector(".todo-priority").value;
+  const playerId = localStorage.getItem("playerId") || null;
   const username = localStorage.getItem("username") || "";
 
   if (!name || !time || !date) return alert("Please fill out all fields.");
@@ -29,8 +33,9 @@ function addInput() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(task)
-  }).then(res => res.json())
-    .then(res => console.log("✅ Task saved:", res))
+  })
+    .then(res => res.json())
+    .then(data => console.log("✅ Task saved to Firestore:", data))
     .catch(err => console.error("❌ Backend save failed:", err));
 
   document.querySelector(".js-array").value = "";
@@ -40,21 +45,18 @@ function addInput() {
   renderHTML();
 }
 
-// ✅ Render Tasks
 function renderHTML() {
   const container = document.querySelector(".todoAdded");
   container.innerHTML = "";
-
   todoList.forEach((task, index) => {
-    const badgeClass = task.priority === 'High' ? 'bg-danger' :
-                      task.priority === 'Medium' ? 'bg-warning text-dark' : 'bg-success';
+    const badgeClass = task.priority === "High" ? "bg-danger" : task.priority === "Medium" ? "bg-warning text-dark" : "bg-success";
     const timeLeft = getTimeLeft(task.date, task.time);
 
     container.innerHTML += `
       <div class="card mb-3">
         <div class="card-body d-flex justify-content-between align-items-center">
           <div>
-            <h5 class="card-title mb-1 ${task.completed ? 'completed' : ''}">${task.name}</h5>
+            <h5 class="card-title mb-1 ${task.completed ? "completed" : ""}">${task.name}</h5>
             <span class="badge ${badgeClass}">${task.priority}</span><br>
             <small class="task-meta">⏰ ${task.time} | 📅 ${task.date}</small><br>
             <span class="countdown">⏳ ${timeLeft}</span>
@@ -69,15 +71,14 @@ function renderHTML() {
   });
 }
 
-// ✅ Helper
 function getTimeLeft(date, time) {
   const now = new Date();
   const target = new Date(`${date}T${time}`);
   const diff = target - now;
   if (diff < 0) return "Due";
-  const minutes = Math.floor((diff / 1000 / 60) % 60);
-  const hours = Math.floor((diff / 1000 / 60 / 60));
-  return `${hours}h ${minutes}m left`;
+  const mins = Math.floor((diff / 1000 / 60) % 60);
+  const hrs = Math.floor(diff / 1000 / 60 / 60);
+  return `${hrs}h ${mins}m left`;
 }
 
 function toggleComplete(index) {
@@ -92,61 +93,80 @@ function deleteTodo(index) {
   renderHTML();
 }
 
-// ✅ Edit Task
 function editTask(index) {
-  const task = todoList[index];
   currentEditIndex = index;
-
-  const nameEl = document.getElementById("editTaskName");
-  const timeEl = document.getElementById("editTaskTime");
-  const dateEl = document.getElementById("editTaskDate");
-  const prioEl = document.getElementById("editTaskPriority");
-
-  if (!nameEl || !timeEl || !dateEl || !prioEl) {
-    console.warn("❌ Edit inputs not found in DOM");
-    return;
-  }
-
-  nameEl.value = task.name;
-  timeEl.value = task.time;
-  dateEl.value = task.date;
-  prioEl.value = task.priority;
-
-  new bootstrap.Modal(document.getElementById("editModal")).show();
+  const task = todoList[index];
+  const modal = document.getElementById("editModal");
+  if (!modal) return;
+  document.getElementById("editTaskName").value = task.name;
+  document.getElementById("editTaskTime").value = task.time;
+  document.getElementById("editTaskDate").value = task.date;
+  document.getElementById("editTaskPriority").value = task.priority;
+  new bootstrap.Modal(modal).show();
 }
 
 function saveEdit() {
   if (currentEditIndex === null) return;
   const task = todoList[currentEditIndex];
-
   task.name = document.getElementById("editTaskName").value;
   task.time = document.getElementById("editTaskTime").value;
   task.date = document.getElementById("editTaskDate").value;
   task.priority = document.getElementById("editTaskPriority").value;
-
   localStorage.setItem("todoList", JSON.stringify(todoList));
   renderHTML();
   bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
 }
 
-// 🌗 Dark Mode
-const darkToggle = document.getElementById("toggleDarkModeSwitch");
-const icon = document.querySelector(".slider .icon");
-darkToggle.addEventListener("change", () => {
-  document.body.classList.toggle("dark-mode");
-  localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
-  icon.textContent = darkToggle.checked ? "☀️" : "🌙";
-});
+// ✅ Username logic
+function saveUsername() {
+  const name = document.getElementById("usernameInput").value.trim();
+  if (name) {
+    localStorage.setItem("username", name);
+    document.getElementById("usernameStatus").textContent = `Saved as: ${name}`;
+    bootstrap.Modal.getInstance(document.getElementById("usernameModal")).hide();
+  }
+}
 
-// 🚀 Init
+// ✅ Notification modal status check
+if (typeof window !== 'undefined') {
+  document.addEventListener("DOMContentLoaded", () => {
+    const statusText = document.getElementById("notifStatus");
+    const toggleBtn = document.getElementById("toggleNotifBtn");
+
+    function updateNotifStatus() {
+      if (window.OneSignal) {
+        OneSignal.isPushNotificationsEnabled().then(enabled => {
+          statusText.textContent = enabled ? "✅ Subscribed" : "❌ Not Subscribed";
+          toggleBtn.textContent = enabled ? "🔕 Unsubscribe" : "🔔 Subscribe";
+        }).catch(() => {
+          statusText.textContent = "❌ Error";
+        });
+      }
+    }
+
+    toggleBtn.addEventListener("click", () => {
+      OneSignal.isPushNotificationsEnabled().then(enabled => {
+        if (enabled) {
+          OneSignal.setSubscription(false).then(updateNotifStatus);
+        } else {
+          OneSignal.registerForPushNotifications().then(updateNotifStatus);
+        }
+      });
+    });
+
+    document.getElementById("notificationModal").addEventListener("show.bs.modal", updateNotifStatus);
+  });
+}
+
 window.onload = () => {
-  const savedTheme = localStorage.getItem("darkMode") === "true";
-  if (savedTheme) {
+  renderHTML();
+  const savedDark = localStorage.getItem("darkMode") === "true";
+  if (savedDark) {
     document.body.classList.add("dark-mode");
-    darkToggle.checked = true;
-    icon.textContent = "☀️";
+    document.getElementById("toggleDarkModeSwitch").checked = true;
+    document.querySelector(".slider .icon").textContent = "☀️";
   } else {
-    icon.textContent = "🌙";
+    document.querySelector(".slider .icon").textContent = "🌙";
   }
 
   if ("Notification" in window && Notification.permission !== "granted") {
@@ -156,51 +176,6 @@ window.onload = () => {
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js")
       .then(reg => console.log("✅ SW registered:", reg.scope))
-      .catch(err => console.warn("❌ SW registration failed:", err));
+      .catch(err => console.warn("❌ SW failed:", err));
   }
-
-  renderHTML();
 };
-
-// ✅ Username Save
-function saveUsername() {
-  const input = document.getElementById("usernameInput");
-  const value = input?.value.trim();
-  if (value) {
-    localStorage.setItem("username", value);
-    const status = document.getElementById("usernameStatus");
-    if (status) status.textContent = `✅ Username: ${value}`;
-    input.value = "";
-  }
-}
-document.addEventListener("DOMContentLoaded", () => {
-  const statusText = document.getElementById("notifStatus");
-  const toggleBtn = document.getElementById("toggleNotifBtn");
-
-  function updateNotifStatus() {
-    if (window.OneSignal) {
-      OneSignal.isPushNotificationsEnabled().then(enabled => {
-        statusText.textContent = enabled ? "✅ Subscribed" : "❌ Not Subscribed";
-        toggleBtn.textContent = enabled ? "🔕 Unsubscribe" : "🔔 Subscribe";
-      }).catch(err => {
-        console.warn("🔔 OneSignal check failed:", err);
-        statusText.textContent = "❌ Error checking status";
-      });
-    } else {
-      statusText.textContent = "❌ OneSignal not loaded";
-    }
-  }
-
-  toggleBtn.addEventListener("click", () => {
-    OneSignal.isPushNotificationsEnabled().then(enabled => {
-      if (enabled) {
-        OneSignal.setSubscription(false).then(updateNotifStatus);
-      } else {
-        OneSignal.registerForPushNotifications().then(updateNotifStatus);
-      }
-    });
-  });
-
-  // 🔁 Refresh status when the modal opens
-  document.getElementById("notificationModal").addEventListener("show.bs.modal", updateNotifStatus);
-});
