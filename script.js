@@ -2,7 +2,7 @@
 const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
 let currentEditIndex = null;
 
-// 🔊 Unlock audio on first user interaction
+// 🔊 Unlock audio
 if (typeof window !== 'undefined') {
   document.addEventListener("click", () => {
     const audio = document.getElementById("reminderSound");
@@ -42,10 +42,19 @@ function addInput() {
   document.querySelector(".time-todo").value = "";
   document.querySelector(".todo-date").value = "";
 
-  renderHTML(true);
+  renderHTML();
+
+  setTimeout(() => {
+    const lastCard = document.querySelector(".todoAdded .card:last-child");
+    if (lastCard) {
+      lastCard.scrollIntoView({ behavior: "smooth" });
+      lastCard.classList.add("shadow-lg", "border", "border-success");
+      setTimeout(() => lastCard.classList.remove("shadow-lg", "border", "border-success"), 1200);
+    }
+  }, 100);
 }
 
-function renderHTML(scrollToNew = false) {
+function renderHTML() {
   const container = document.querySelector(".todoAdded");
   container.innerHTML = "";
   todoList.forEach((task, index) => {
@@ -53,7 +62,7 @@ function renderHTML(scrollToNew = false) {
     const timeLeft = getTimeLeft(task.date, task.time);
 
     const card = document.createElement("div");
-    card.className = "card mb-3 animate__animated animate__fadeIn";
+    card.className = "card mb-3";
     card.innerHTML = `
       <div class="card-body d-flex justify-content-between align-items-center">
         <div>
@@ -67,12 +76,8 @@ function renderHTML(scrollToNew = false) {
           <button class="btn btn-sm btn-outline-secondary" onclick="editTask(${index})">✏️</button>
           <button class="btn btn-sm btn-outline-danger" onclick="deleteTodo(${index})">🗑</button>
         </div>
-      </div>
-    `;
+      </div>`;
     container.appendChild(card);
-    if (scrollToNew && index === todoList.length - 1) {
-      setTimeout(() => card.scrollIntoView({ behavior: "smooth" }), 100);
-    }
   });
 }
 
@@ -101,13 +106,11 @@ function deleteTodo(index) {
 function editTask(index) {
   currentEditIndex = index;
   const task = todoList[index];
-  const modal = document.getElementById("editModal");
-  if (!modal) return;
   document.getElementById("editTaskName").value = task.name;
   document.getElementById("editTaskTime").value = task.time;
   document.getElementById("editTaskDate").value = task.date;
   document.getElementById("editTaskPriority").value = task.priority;
-  new bootstrap.Modal(modal).show();
+  new bootstrap.Modal(document.getElementById("editModal")).show();
 }
 
 function saveEdit() {
@@ -131,26 +134,22 @@ function saveUsername() {
   }
 }
 
-// ✅ Notification modal status check
+function updateNotifStatus() {
+  const statusText = document.getElementById("notifStatus");
+  const toggleBtn = document.getElementById("toggleNotifBtn");
+  if (window.OneSignal) {
+    OneSignal.isPushNotificationsEnabled().then(enabled => {
+      statusText.textContent = enabled ? "✅ Subscribed" : "❌ Not Subscribed";
+      toggleBtn.textContent = enabled ? "🔕 Unsubscribe" : "🔔 Subscribe";
+    }).catch(() => {
+      statusText.textContent = "❌ Error";
+    });
+  }
+}
+
 if (typeof window !== 'undefined') {
   document.addEventListener("DOMContentLoaded", () => {
-    const statusText = document.getElementById("notifStatus");
-    const toggleBtn = document.getElementById("toggleNotifBtn");
-
-    function updateNotifStatus() {
-      if (window.OneSignal) {
-        OneSignal.isPushNotificationsEnabled().then(enabled => {
-          statusText.textContent = enabled ? "✅ Subscribed" : "❌ Not Subscribed";
-          toggleBtn.textContent = enabled ? "🔕 Unsubscribe" : "🔔 Subscribe";
-        }).catch(() => {
-          statusText.textContent = "❌ Error";
-        });
-      } else {
-        statusText.textContent = "❌ Unavailable";
-      }
-    }
-
-    toggleBtn?.addEventListener("click", () => {
+    document.getElementById("toggleNotifBtn").addEventListener("click", () => {
       OneSignal.isPushNotificationsEnabled().then(enabled => {
         if (enabled) {
           OneSignal.setSubscription(false).then(updateNotifStatus);
@@ -159,32 +158,21 @@ if (typeof window !== 'undefined') {
         }
       });
     });
-
-    document.getElementById("notificationModal")?.addEventListener("show.bs.modal", updateNotifStatus);
+    document.getElementById("notificationModal").addEventListener("show.bs.modal", updateNotifStatus);
   });
 }
 
-// 🌙 System Dark Mode Preference
 window.onload = () => {
   renderHTML();
+  const savedDark = localStorage.getItem("darkMode");
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const saved = localStorage.getItem("darkMode");
-  const darkToggle = document.getElementById("toggleDarkModeSwitch");
-  const icon = document.querySelector(".slider .icon");
-
-  if ((saved === null && prefersDark) || saved === "true") {
+  if (savedDark === "true" || (savedDark === null && prefersDark)) {
     document.body.classList.add("dark-mode");
-    darkToggle.checked = true;
-    icon.textContent = "☀️";
+    document.getElementById("toggleDarkModeSwitch").checked = true;
+    document.querySelector(".slider .icon").textContent = "☀️";
   } else {
-    icon.textContent = "🌙";
+    document.querySelector(".slider .icon").textContent = "🌙";
   }
-
-  darkToggle.addEventListener("change", function () {
-    document.body.classList.toggle("dark-mode");
-    localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
-    icon.textContent = this.checked ? "☀️" : "🌙";
-  });
 
   if ("Notification" in window && Notification.permission !== "granted") {
     Notification.requestPermission();
@@ -196,3 +184,11 @@ window.onload = () => {
       .catch(err => console.warn("❌ SW failed:", err));
   }
 };
+
+// 🌙 Dark mode manual toggle
+const darkToggle = document.getElementById("toggleDarkModeSwitch");
+darkToggle.addEventListener("change", function () {
+  document.body.classList.toggle("dark-mode");
+  localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+  document.querySelector(".slider .icon").textContent = this.checked ? "☀️" : "🌙";
+});
