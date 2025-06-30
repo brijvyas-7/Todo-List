@@ -2,6 +2,15 @@
 const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
 let currentEditIndex = null;
 
+let username = localStorage.getItem("username") || "";
+
+if (!username) {
+  username = prompt("Enter your name:");
+  if (username) {
+    localStorage.setItem("username", username);
+  }
+}
+
 // 🔊 Unlock audio on first click
 addEventListener("click", () => {
   const audio = document.getElementById("reminderSound");
