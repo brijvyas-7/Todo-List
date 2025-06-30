@@ -1,54 +1,46 @@
 const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
 let currentEditIndex = null;
 
-// Unlock audio on first interaction
+// 🔊 Unlock audio once
 document.addEventListener("click", () => {
   const audio = document.getElementById("reminderSound");
-  audio.play().then(() => {
+  audio?.play().then(() => {
     audio.pause();
     audio.currentTime = 0;
   }).catch(() => {});
 }, { once: true });
 
+// ✅ Add Task
 function addInput() {
-  const inputEl = document.querySelector(".js-array");
-  const timeEl = document.querySelector(".time-todo");
-  const dateEl = document.querySelector(".todo-date");
-  const priority = document.querySelector(".todo-priority").value;
-  const username = localStorage.getItem("username") || "";
+  const name = document.querySelector(".js-array")?.value.trim();
+  const time = document.querySelector(".time-todo")?.value;
+  const date = document.querySelector(".todo-date")?.value;
+  const priority = document.querySelector(".todo-priority")?.value;
   const playerId = localStorage.getItem("playerId");
-
-  const name = inputEl.value.trim();
-  const time = timeEl.value;
-  const date = dateEl.value;
+  const username = localStorage.getItem("username") || "";
 
   if (!name || !time || !date) return alert("Please fill out all fields.");
 
-  const taskData = { name, time, date, priority, alerted: false, completed: false, playerId, username };
-  todoList.push(taskData);
+  const task = { name, time, date, priority, alerted: false, completed: false, playerId, username };
+  todoList.push(task);
   localStorage.setItem("todoList", JSON.stringify(todoList));
 
-  // 🔁 Save to backend
   fetch("https://todo-notifier.onrender.com/save-task", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(taskData),
-  })
-    .then(res => res.json())
-    .then(data => {
-      console.log("✅ Task saved to Firestore:", data);
-    })
-    .catch(err => {
-      console.error("❌ Failed to save task to backend:", err);
-    });
+    body: JSON.stringify(task)
+  }).then(res => res.json())
+    .then(res => console.log("✅ Task saved:", res))
+    .catch(err => console.error("❌ Backend save failed:", err));
 
-  inputEl.value = "";
-  timeEl.value = "";
-  dateEl.value = "";
+  document.querySelector(".js-array").value = "";
+  document.querySelector(".time-todo").value = "";
+  document.querySelector(".todo-date").value = "";
 
   renderHTML();
 }
 
+// ✅ Render Tasks
 function renderHTML() {
   const container = document.querySelector(".todoAdded");
   container.innerHTML = "";
@@ -77,6 +69,7 @@ function renderHTML() {
   });
 }
 
+// ✅ Helper
 function getTimeLeft(date, time) {
   const now = new Date();
   const target = new Date(`${date}T${time}`);
@@ -99,32 +92,38 @@ function deleteTodo(index) {
   renderHTML();
 }
 
+// ✅ Edit Task
 function editTask(index) {
   const task = todoList[index];
   currentEditIndex = index;
-  const nameInput = document.getElementById("editTaskName");
-  const timeInput = document.getElementById("editTaskTime");
-  const dateInput = document.getElementById("editTaskDate");
-  const prioritySelect = document.getElementById("editTaskPriority");
 
-  if (nameInput && timeInput && dateInput && prioritySelect) {
-    nameInput.value = task.name;
-    timeInput.value = task.time;
-    dateInput.value = task.date;
-    prioritySelect.value = task.priority;
-    new bootstrap.Modal(document.getElementById("editModal")).show();
-  } else {
-    console.error("❌ Edit inputs not found in DOM");
+  const nameEl = document.getElementById("editTaskName");
+  const timeEl = document.getElementById("editTaskTime");
+  const dateEl = document.getElementById("editTaskDate");
+  const prioEl = document.getElementById("editTaskPriority");
+
+  if (!nameEl || !timeEl || !dateEl || !prioEl) {
+    console.warn("❌ Edit inputs not found in DOM");
+    return;
   }
+
+  nameEl.value = task.name;
+  timeEl.value = task.time;
+  dateEl.value = task.date;
+  prioEl.value = task.priority;
+
+  new bootstrap.Modal(document.getElementById("editModal")).show();
 }
 
 function saveEdit() {
   if (currentEditIndex === null) return;
   const task = todoList[currentEditIndex];
+
   task.name = document.getElementById("editTaskName").value;
   task.time = document.getElementById("editTaskTime").value;
   task.date = document.getElementById("editTaskDate").value;
   task.priority = document.getElementById("editTaskPriority").value;
+
   localStorage.setItem("todoList", JSON.stringify(todoList));
   renderHTML();
   bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
@@ -133,17 +132,14 @@ function saveEdit() {
 // 🌗 Dark Mode
 const darkToggle = document.getElementById("toggleDarkModeSwitch");
 const icon = document.querySelector(".slider .icon");
-
-darkToggle.addEventListener("change", function () {
+darkToggle.addEventListener("change", () => {
   document.body.classList.toggle("dark-mode");
   localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
-  icon.textContent = this.checked ? "☀️" : "🌙";
+  icon.textContent = darkToggle.checked ? "☀️" : "🌙";
 });
 
-// 🚀 On Load
+// 🚀 Init
 window.onload = () => {
-  renderHTML();
-
   const savedTheme = localStorage.getItem("darkMode") === "true";
   if (savedTheme) {
     document.body.classList.add("dark-mode");
@@ -162,58 +158,18 @@ window.onload = () => {
       .then(reg => console.log("✅ SW registered:", reg.scope))
       .catch(err => console.warn("❌ SW registration failed:", err));
   }
+
+  renderHTML();
 };
 
-// 🔁 Reminder loop
-setInterval(checkReminders, 10000);
-
-function checkReminders() {
-  // This function checks for local reminders only
-  const now = new Date();
-  let found = false;
-
-  todoList.forEach(task => {
-    if (!task.alerted && task.date && task.time) {
-      const dueTime = new Date(`${task.date}T${task.time}`);
-      const diff = dueTime - now;
-
-      if (diff <= 0 && diff > -60000) {
-        found = true;
-        task.alerted = true;
-        localStorage.setItem("todoList", JSON.stringify(todoList));
-        const toastEl = document.getElementById("webToast");
-        const toastText = document.getElementById("webToastText");
-        toastText.textContent = `Reminder: ${task.name}`;
-        new bootstrap.Toast(toastEl).show();
-        document.getElementById("reminderSound").play().catch(() => {});
-      }
-    }
-  });
-
-  if (!found) {
-    console.log("✅ No due tasks at this check.");
-  }
-}
-
+// ✅ Username Save
 function saveUsername() {
-  const usernameInput = document.getElementById("usernameInput");
-  const username = usernameInput.value.trim();
-
-  if (!username) {
-    alert("Please enter a username.");
-    return;
-  }
-
-  localStorage.setItem("username", username);
-  document.getElementById("usernameStatus").textContent = `✅ Username: ${username}`;
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const username = localStorage.getItem("username");
-  if (username) {
-    const input = document.getElementById("usernameInput");
+  const input = document.getElementById("usernameInput");
+  const value = input?.value.trim();
+  if (value) {
+    localStorage.setItem("username", value);
     const status = document.getElementById("usernameStatus");
-    if (input) input.value = username;
-    if (status) status.textContent = `✅ Username: ${username}`;
+    if (status) status.textContent = `✅ Username: ${value}`;
+    input.value = "";
   }
-});
+}
