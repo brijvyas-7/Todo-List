@@ -89,25 +89,20 @@
   position: fixed;
   bottom: 0;
   width: 100%;
-  padding: 6px 0;
+  padding: 8px 0;
   font-size: 0.85rem;
   text-align: center;
   z-index: 1000;
-  opacity: 0.6;
-  transition: opacity 0.3s ease, background-color 0.3s;
+  transition: background-color 0.3s ease, color 0.3s ease;
   background-color: #f8f9fa;
-  color: #6c757d;
+  color: #495057;
   border-top: 1px solid #dee2e6;
 }
 
-.footer-animated:hover {
-  opacity: 1;
-}
-
 body.dark-mode .footer-animated {
-  background-color: #1a1a1a;
-  color: #e0e0e0;
-  border-top: 1px solid #333;
+  background-color: #1c1c1c;       /* Dark background */
+  color: #e0e0e0;                  /* Bright enough text */
+  border-top: 1px solid #444;
 }
 
   </style>
