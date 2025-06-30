@@ -44,14 +44,21 @@ function addInput() {
 
   renderHTML();
 
-  setTimeout(() => {
-    const lastCard = document.querySelector(".todoAdded .card:last-child");
-    if (lastCard) {
-      lastCard.scrollIntoView({ behavior: "smooth" });
-      lastCard.classList.add("shadow-lg", "border", "border-success");
-      setTimeout(() => lastCard.classList.remove("shadow-lg", "border", "border-success"), 1200);
-    }
-  }, 100);
+  requestAnimationFrame(() => {
+  const lastCard = document.querySelector(".todoAdded .card:last-child");
+  if (lastCard) {
+    lastCard.scrollIntoView({ behavior: "smooth", block: "center" });
+    lastCard.classList.add("shadow-lg", "border", "border-success");
+
+    // Use transition class for smooth visual effect
+    lastCard.style.transition = "all 0.4s ease-in-out";
+
+    setTimeout(() => {
+      lastCard.classList.remove("shadow-lg", "border", "border-success");
+      lastCard.style.transition = "";
+    }, 1000);
+  }
+});
 }
 
 function renderHTML() {
