@@ -45,73 +45,85 @@
   </script>
 
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-    }
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
 
-    body {
-      overflow-x: hidden;
-    }
+  body {
+    overflow-y: auto;
+  }
 
-    body.dark-mode {
-      background-color: #121212;
-      color: #fff;
-    }
+  body.dark-mode {
+    background-color: #121212;
+    color: #fff;
+  }
 
-    .dark-mode .card { background-color: #1f1f1f; color: #fff; }
-    .completed { text-decoration: line-through; color: gray; }
-    .countdown { font-size: 0.9rem; color: #6c757d; }
-    .dark-mode .task-meta { color: #ccc; }
+  .container {
+    flex: 1 0 auto;
+  }
 
-    .form-switch {
-      position: relative;
-      display: inline-block;
-      width: 70px;
-      height: 36px;
-    }
-    .form-switch input { opacity: 0; width: 0; height: 0; }
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      background-color: #111;
-      border-radius: 50px;
-      top: 0; left: 0; right: 0; bottom: 0;
-      transition: 0.4s;
-      display: flex;
-      align-items: center;
-      padding-left: 10px;
-    }
-    .slider .icon {
-      color: #fff;
-      font-size: 18px;
-      transition: transform 0.4s ease;
-    }
-    input:checked + .slider {
-      background-color: #0d6efd;
-      padding-left: 36px;
-    }
-    input:checked + .slider .icon {
-      transform: rotate(360deg);
-    }
-    #playerIdDisplay { display: none; }
+  .dark-mode .card { background-color: #1f1f1f; color: #fff; }
+  .completed { text-decoration: line-through; color: gray; }
+  .countdown { font-size: 0.9rem; color: #6c757d; }
+  .dark-mode .task-meta { color: #ccc; }
 
-    .footer-animated {
-      margin-top: auto;
-      padding: 10px 0;
-      font-size: 0.85rem;
-      text-align: center;
-      background: #f8f9fa;
-      color: #495057;
-      border-top: 1px solid #dee2e6;
-    }
-    body.dark-mode .footer-animated {
-      background: #121212;
-      color: #ccc;
-      border-top: 1px solid #333;
-    }
+  .form-switch {
+    position: relative;
+    display: inline-block;
+    width: 70px;
+    height: 36px;
+  }
+
+  .form-switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    background-color: #111;
+    border-radius: 50px;
+    top: 0; left: 0; right: 0; bottom: 0;
+    transition: 0.4s;
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+  }
+
+  .slider .icon {
+    color: #fff;
+    font-size: 18px;
+    transition: transform 0.4s ease;
+  }
+
+  input:checked + .slider {
+    background-color: #0d6efd;
+    padding-left: 36px;
+  }
+  input:checked + .slider .icon {
+    transform: rotate(360deg);
+  }
+
+  #playerIdDisplay { display: none; }
+
+  .footer-animated {
+    flex-shrink: 0;
+    width: 100%;
+    padding: 10px 0;
+    font-size: 0.85rem;
+    text-align: center;
+    background: #f8f9fa;
+    color: #495057;
+    border-top: 1px solid #dee2e6;
+  }
+
+  body.dark-mode .footer-animated {
+    background: #121212;
+    color: #ccc;
+    border-top: 1px solid #333;
+  }
     body.dark-mode .text-muted {
     
       color: #fff !important;
