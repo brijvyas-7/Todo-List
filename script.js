@@ -23,7 +23,7 @@ function addInput() {
 
   if (!name || !time || !date) return alert("Please fill out all fields.");
 
-  const taskData = { name, time, date, priority, alerted: false, completed: false, playerId };
+  const taskData = { name, time, date, priority, alerted: false, completed: false, playerId, username };
   todoList.push(taskData);
   localStorage.setItem("todoList", JSON.stringify(todoList));
 
