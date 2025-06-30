@@ -194,3 +194,16 @@ function checkReminders() {
     console.log("✅ No due tasks at this check.");
   }
 }
+
+function saveUsername() {
+  const usernameInput = document.getElementById("usernameInput");
+  const username = usernameInput.value.trim();
+
+  if (!username) {
+    alert("Please enter a username.");
+    return;
+  }
+
+  localStorage.setItem("username", username);
+  document.getElementById("usernameStatus").textContent = `✅ Username: ${username}`;
+}
