@@ -85,27 +85,29 @@
       transform: rotate(360deg);
     }
     #playerIdDisplay { display: none; }
-   .footer-animated {
+ .footer-animated {
   position: fixed;
   bottom: 0;
   width: 100%;
-  padding: 8px 0;
+  padding: 6px 0;
   font-size: 0.85rem;
   text-align: center;
   z-index: 1000;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  opacity: 0.6;
+  transition: opacity 0.3s ease, background-color 0.3s;
   background-color: #f8f9fa;
-  color: #495057;
+  color: #6c757d;
   border-top: 1px solid #dee2e6;
 }
 
-body.dark-mode .footer-animated {
-  background-color: #121212;
-  color: #ccc;
-  border-top: 1px solid #333;
-}
 .footer-animated:hover {
   opacity: 1;
+}
+
+body.dark-mode .footer-animated {
+  background-color: #1a1a1a;
+  color: #aaa;
+  border-top: 1px solid #333;
 }
 
   </style>
