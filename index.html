@@ -4,14 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>To-Do App</title>
+
+  <!-- ✅ PWA Manifest -->
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="icon" href="icon-192.png" type="image/png" />
   <meta name="theme-color" content="#0d6efd" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
+
+  <!-- ✅ Mobile PWA Support -->
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="To-Do List" />
+
+  <!-- ✅ Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- ✅ OneSignal Web Push SDK -->
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
   <script>
     window.OneSignal = window.OneSignal || [];
@@ -21,15 +29,22 @@
         notifyButton: { enable: true },
         allowLocalhostAsSecureOrigin: true
       });
+
+      // Get and store playerId
       OneSignal.on('subscriptionChange', function (isSubscribed) {
         if (isSubscribed) {
           OneSignal.getUserId(function (playerId) {
-            if (playerId) localStorage.setItem("playerId", playerId);
+            if (playerId) {
+              localStorage.setItem("playerId", playerId);
+              const displayDiv = document.getElementById("playerIdDisplay");
+              if (displayDiv) displayDiv.style.display = "none";
+            }
           });
         }
       });
     });
   </script>
+
   <style>
     body.dark-mode {
       background-color: #121212;
@@ -39,6 +54,7 @@
     .completed { text-decoration: line-through; color: gray; }
     .countdown { font-size: 0.9rem; color: #6c757d; }
     .dark-mode .task-meta { color: #ccc; }
+
     .form-switch {
       position: relative;
       display: inline-block;
@@ -69,14 +85,8 @@
     input:checked + .slider .icon {
       transform: rotate(360deg);
     }
-    .icon-btn {
-      width: 36px;
-      height: 36px;
-      padding: 0;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    #playerIdDisplay {
+      display: none;
     }
   </style>
 </head>
