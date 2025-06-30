@@ -207,3 +207,13 @@ function saveUsername() {
   localStorage.setItem("username", username);
   document.getElementById("usernameStatus").textContent = `✅ Username: ${username}`;
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const username = localStorage.getItem("username");
+  if (username) {
+    const input = document.getElementById("usernameInput");
+    const status = document.getElementById("usernameStatus");
+    if (input) input.value = username;
+    if (status) status.textContent = `✅ Username: ${username}`;
+  }
+});
