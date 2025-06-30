@@ -179,26 +179,30 @@ window.onload = () => {
       .catch(err => console.warn("❌ SW failed:", err));
   }
 };
-// 🌗 Detect + Apply Dark Mode on Load
-window.onload = () => {
-  // Set theme from localStorage or system preference
-  const userPref = localStorage.getItem("darkMode");
-  const systemPref = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const darkModeEnabled = userPref === "true" || (userPref === null && systemPref);
 
-  document.body.classList.toggle("dark-mode", darkModeEnabled);
-  const toggleSwitch = document.getElementById("toggleDarkModeSwitch");
-  if (toggleSwitch) toggleSwitch.checked = darkModeEnabled;
-
-  const icon = document.querySelector(".slider .icon");
-  if (icon) icon.textContent = darkModeEnabled ? "☀️" : "🌙";
-};
-
-// 🌗 Toggle Dark Mode Manually
-document.getElementById("toggleDarkModeSwitch").addEventListener("change", function () {
-  const isDark = this.checked;
+function applyTheme(isDark) {
   document.body.classList.toggle("dark-mode", isDark);
   localStorage.setItem("darkMode", isDark);
   const icon = document.querySelector(".slider .icon");
   if (icon) icon.textContent = isDark ? "☀️" : "🌙";
+  const toggle = document.getElementById("toggleDarkModeSwitch");
+  if (toggle) toggle.checked = isDark;
+}
+
+// 👂 Detect system preference on first load
+function getInitialTheme() {
+  const stored = localStorage.getItem("darkMode");
+  if (stored !== null) return stored === "true";
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+// 🚀 Apply on page load
+window.addEventListener("DOMContentLoaded", () => {
+  const isDark = getInitialTheme();
+  applyTheme(isDark);
+
+  const toggle = document.getElementById("toggleDarkModeSwitch");
+  if (toggle) {
+    toggle.addEventListener("change", () => applyTheme(toggle.checked));
+  }
 });
