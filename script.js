@@ -1,5 +1,3 @@
-// script.js
-
 const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
 let currentEditIndex = null;
 
@@ -17,12 +15,12 @@ function addInput() {
   const timeEl = document.querySelector(".time-todo");
   const dateEl = document.querySelector(".todo-date");
   const priority = document.querySelector(".todo-priority").value;
+  const username = localStorage.getItem("username") || "";
+  const playerId = localStorage.getItem("playerId");
 
   const name = inputEl.value.trim();
   const time = timeEl.value;
   const date = dateEl.value;
-  const playerId = localStorage.getItem("playerId");
-  const username = localStorage.getItem("username") || "";
 
   if (!name || !time || !date) return alert("Please fill out all fields.");
 
@@ -30,6 +28,7 @@ function addInput() {
   todoList.push(taskData);
   localStorage.setItem("todoList", JSON.stringify(todoList));
 
+  // 🔁 Save to backend
   fetch("https://todo-notifier.onrender.com/save-task", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -102,12 +101,21 @@ function deleteTodo(index) {
 
 function editTask(index) {
   const task = todoList[index];
-  document.getElementById("editTaskName").value = task.name;
-  document.getElementById("editTaskTime").value = task.time;
-  document.getElementById("editTaskDate").value = task.date;
-  document.getElementById("editTaskPriority").value = task.priority;
   currentEditIndex = index;
-  new bootstrap.Modal(document.getElementById("editModal")).show();
+  const nameInput = document.getElementById("editTaskName");
+  const timeInput = document.getElementById("editTaskTime");
+  const dateInput = document.getElementById("editTaskDate");
+  const prioritySelect = document.getElementById("editTaskPriority");
+
+  if (nameInput && timeInput && dateInput && prioritySelect) {
+    nameInput.value = task.name;
+    timeInput.value = task.time;
+    dateInput.value = task.date;
+    prioritySelect.value = task.priority;
+    new bootstrap.Modal(document.getElementById("editModal")).show();
+  } else {
+    console.error("❌ Edit inputs not found in DOM");
+  }
 }
 
 function saveEdit() {
@@ -122,6 +130,7 @@ function saveEdit() {
   bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
 }
 
+// 🌗 Dark Mode
 const darkToggle = document.getElementById("toggleDarkModeSwitch");
 const icon = document.querySelector(".slider .icon");
 
@@ -131,8 +140,10 @@ darkToggle.addEventListener("change", function () {
   icon.textContent = this.checked ? "☀️" : "🌙";
 });
 
+// 🚀 On Load
 window.onload = () => {
   renderHTML();
+
   const savedTheme = localStorage.getItem("darkMode") === "true";
   if (savedTheme) {
     document.body.classList.add("dark-mode");
@@ -153,22 +164,33 @@ window.onload = () => {
   }
 };
 
-setInterval(() => {
-  let found = false;
+// 🔁 Reminder loop
+setInterval(checkReminders, 10000);
+
+function checkReminders() {
+  // This function checks for local reminders only
   const now = new Date();
+  let found = false;
+
   todoList.forEach(task => {
-    const target = new Date(`${task.date}T${task.time}`);
-    if (!task.alerted && now >= target) {
-      task.alerted = true;
-      const username = task.username || "Hey buddy";
-      const msg = `${username}, your task '${task.name}' is due now!`;
-      const toast = new bootstrap.Toast(document.getElementById("webToast"));
-      document.getElementById("webToastText").textContent = msg;
-      document.getElementById("reminderSound").play();
-      toast.show();
-      found = true;
+    if (!task.alerted && task.date && task.time) {
+      const dueTime = new Date(`${task.date}T${task.time}`);
+      const diff = dueTime - now;
+
+      if (diff <= 0 && diff > -60000) {
+        found = true;
+        task.alerted = true;
+        localStorage.setItem("todoList", JSON.stringify(todoList));
+        const toastEl = document.getElementById("webToast");
+        const toastText = document.getElementById("webToastText");
+        toastText.textContent = `Reminder: ${task.name}`;
+        new bootstrap.Toast(toastEl).show();
+        document.getElementById("reminderSound").play().catch(() => {});
+      }
     }
   });
-  localStorage.setItem("todoList", JSON.stringify(todoList));
-  if (!found) console.log("✅ No due tasks at this check.");
-}, 10000);
+
+  if (!found) {
+    console.log("✅ No due tasks at this check.");
+  }
+}
