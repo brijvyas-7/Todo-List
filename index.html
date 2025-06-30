@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>To-Do App</title>
-
-  <!-- Manifest and PWA -->
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="icon" href="icon-192.png" type="image/png" />
@@ -13,33 +11,25 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="To-Do List" />
-
-  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-
-  <!-- ✅ OneSignal SDK -->
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
   <script>
-  window.OneSignal = window.OneSignal || [];
-  OneSignal.push(function () {
-    OneSignal.init({
-      appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c",
-      notifyButton: { enable: true },
-      allowLocalhostAsSecureOrigin: true
+    window.OneSignal = window.OneSignal || [];
+    OneSignal.push(function () {
+      OneSignal.init({
+        appId: "db9451af-136d-4ce4-bc80-b39aa7589d4c",
+        notifyButton: { enable: true },
+        allowLocalhostAsSecureOrigin: true
+      });
+      OneSignal.on('subscriptionChange', function (isSubscribed) {
+        if (isSubscribed) {
+          OneSignal.getUserId(function (playerId) {
+            if (playerId) localStorage.setItem("playerId", playerId);
+          });
+        }
+      });
     });
-
-    OneSignal.on('subscriptionChange', function (isSubscribed) {
-      if (isSubscribed) {
-        OneSignal.getUserId(function (playerId) {
-          if (playerId) {
-            localStorage.setItem("playerId", playerId);
-          }
-        });
-      }
-    });
-  });
   </script>
-
   <style>
     body.dark-mode {
       background-color: #121212;
@@ -49,60 +39,58 @@
     .completed { text-decoration: line-through; color: gray; }
     .countdown { font-size: 0.9rem; color: #6c757d; }
     .dark-mode .task-meta { color: #ccc; }
-
     .form-switch {
       position: relative;
       display: inline-block;
       width: 70px;
       height: 36px;
     }
-
     .form-switch input { opacity: 0; width: 0; height: 0; }
     .slider {
-      position: absolute; cursor: pointer; background-color: #111;
-      border-radius: 50px; top: 0; left: 0; right: 0; bottom: 0;
-      transition: 0.4s; display: flex; align-items: center; padding-left: 10px;
+      position: absolute;
+      cursor: pointer;
+      background-color: #111;
+      border-radius: 50px;
+      top: 0; left: 0; right: 0; bottom: 0;
+      transition: 0.4s;
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
     }
-
     .slider .icon {
-      color: #fff; font-size: 18px; transition: transform 0.4s ease;
+      color: #fff;
+      font-size: 18px;
+      transition: transform 0.4s ease;
     }
-
     input:checked + .slider {
-      background-color: #0d6efd; padding-left: 36px;
+      background-color: #0d6efd;
+      padding-left: 36px;
     }
     input:checked + .slider .icon {
       transform: rotate(360deg);
     }
-    .dark-mode .modal-content {
-  background-color: #1f1f1f;
-  color: #fff;
-}
-
-.dark-mode .btn-close {
-  filter: invert(1);
-}
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 <body>
-  <div class="container py-5 d-flex flex-column align-items-center">
+  <div class="container py-4 d-flex flex-column align-items-center">
     <h1 class="text-center mb-3">📝 To-Do List</h1>
-
-    <div class="d-flex align-items-center justify-content-center gap-3 mb-3">
-      <!-- Dark Mode Toggle -->
+    <div class="d-flex gap-3 mb-3">
       <label class="form-switch">
         <input type="checkbox" id="toggleDarkModeSwitch">
         <span class="slider"><span class="icon">🌙</span></span>
       </label>
-
-      <!-- Change Username -->
-      <button class="btn btn-outline-secondary" onclick="new bootstrap.Modal(document.getElementById('usernameModal')).show()">🧑 Change Name</button>
-
-      <!-- Notification Settings -->
-      <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#notificationModal">🔔 Notification Settings</button>
+      <button class="btn btn-outline-secondary icon-btn" title="Notification Settings" data-bs-toggle="modal" data-bs-target="#notificationModal">🔔</button>
+      <button class="btn btn-outline-secondary icon-btn" title="Username Settings" data-bs-toggle="modal" data-bs-target="#usernameModal">👤</button>
     </div>
-
-    <!-- Task Input -->
     <div class="card p-4 w-100" style="max-width: 800px;">
       <div class="row g-3">
         <div class="col-md-4"><input type="text" class="form-control js-array" placeholder="Enter task..."></div>
@@ -115,66 +103,48 @@
             <option value="Low">Low</option>
           </select>
         </div>
-        <div class="col-md-2">
-          <button onclick="addInput()" class="btn btn-primary w-100">Add</button>
+        <div class="col-md-2"><button onclick="addInput()" class="btn btn-primary w-100">Add</button></div>
+      </div>
+    </div>
+    <div class="todoAdded w-100 mt-4" style="max-width: 800px;"></div>
+  </div>
+
+  <!-- Notification Modal -->
+  <div class="modal fade" id="notificationModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content bg-dark text-white">
+        <div class="modal-header">
+          <h5 class="modal-title">Notification Settings</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>Status: <strong id="notifStatus">Checking...</strong></p>
+          <button id="toggleNotifBtn" class="btn btn-secondary w-100 mb-2">Toggle Notifications</button>
+          <button id="testNotifBtn" class="btn btn-outline-light w-100">Send Test Notification</button>
         </div>
       </div>
     </div>
-
-    <div class="todoAdded w-100 mt-4" style="max-width: 800px;"></div>
   </div>
 
   <!-- Username Modal -->
   <div class="modal fade" id="usernameModal" tabindex="-1">
     <div class="modal-dialog">
-      <div class="modal-content">
+      <div class="modal-content bg-dark text-white">
         <div class="modal-header">
           <h5 class="modal-title">Set Your Name</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <input type="text" id="usernameInput" class="form-control" placeholder="Enter your name" />
         </div>
         <div class="modal-footer">
-          <button class="btn btn-primary" onclick="saveUsername()">Save</button>
+          <button type="button" class="btn btn-light" onclick="saveUsername()">Save</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 🔔 Notification Settings Modal -->
-<div class="modal fade" id="notificationModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content bg-light text-dark dark-mode-bg">
-      <div class="modal-header">
-        <h5 class="modal-title">🔔 Notification Settings</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <p>Status: <strong id="notifStatus">Checking...</strong></p>
-        <button id="toggleNotifBtn" class="btn btn-outline-primary w-100 mb-3">Toggle Notifications</button>
-        <button id="testNotifBtn" class="btn btn-outline-success w-100">Send Test Notification</button>
-      </div>
-    </div>
-  </div>
-</div>
-
   <audio id="reminderSound" src="notification.mp3" preload="auto"></audio>
-  <script>
-    function saveUsername() {
-      const name = document.getElementById("usernameInput").value.trim();
-      if (name) {
-        localStorage.setItem("username", name);
-        bootstrap.Modal.getInstance(document.getElementById("usernameModal")).hide();
-      }
-    }
-
-    window.addEventListener("DOMContentLoaded", () => {
-      const username = localStorage.getItem("username");
-      if (!username) {
-        new bootstrap.Modal(document.getElementById("usernameModal")).show();
-      }
-    });
-  </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="script.js"></script>
 </body>
