@@ -173,3 +173,34 @@ function saveUsername() {
     input.value = "";
   }
 }
+document.addEventListener("DOMContentLoaded", () => {
+  const statusText = document.getElementById("notifStatus");
+  const toggleBtn = document.getElementById("toggleNotifBtn");
+
+  function updateNotifStatus() {
+    if (window.OneSignal) {
+      OneSignal.isPushNotificationsEnabled().then(enabled => {
+        statusText.textContent = enabled ? "✅ Subscribed" : "❌ Not Subscribed";
+        toggleBtn.textContent = enabled ? "🔕 Unsubscribe" : "🔔 Subscribe";
+      }).catch(err => {
+        console.warn("🔔 OneSignal check failed:", err);
+        statusText.textContent = "❌ Error checking status";
+      });
+    } else {
+      statusText.textContent = "❌ OneSignal not loaded";
+    }
+  }
+
+  toggleBtn.addEventListener("click", () => {
+    OneSignal.isPushNotificationsEnabled().then(enabled => {
+      if (enabled) {
+        OneSignal.setSubscription(false).then(updateNotifStatus);
+      } else {
+        OneSignal.registerForPushNotifications().then(updateNotifStatus);
+      }
+    });
+  });
+
+  // 🔁 Refresh status when the modal opens
+  document.getElementById("notificationModal").addEventListener("show.bs.modal", updateNotifStatus);
+});
