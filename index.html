@@ -5,18 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>To-Do App</title>
 
-  <!-- ✅ PWA Manifest -->
+  <!-- ✅ PWA & Icons -->
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="icon" href="icon-192.png" type="image/png" />
   <meta name="theme-color" content="#0d6efd" />
-
-  <!-- ✅ Mobile PWA Support -->
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="To-Do List" />
 
-  <!-- ✅ Bootstrap CSS -->
+  <!-- ✅ Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 
   <!-- ✅ OneSignal Web Push SDK -->
@@ -45,10 +43,22 @@
   </script>
 
   <style>
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: #fff;
+    }
+
     body.dark-mode {
       background-color: #121212;
       color: #fff;
     }
+
     .dark-mode .card { background-color: #1f1f1f; color: #fff; }
     .completed { text-decoration: line-through; color: gray; }
     .countdown { font-size: 0.9rem; color: #6c757d; }
@@ -60,7 +70,9 @@
       width: 70px;
       height: 36px;
     }
+
     .form-switch input { opacity: 0; width: 0; height: 0; }
+
     .slider {
       position: absolute;
       cursor: pointer;
@@ -72,48 +84,51 @@
       align-items: center;
       padding-left: 10px;
     }
+
     .slider .icon {
       color: #fff;
       font-size: 18px;
       transition: transform 0.4s ease;
     }
+
     input:checked + .slider {
       background-color: #0d6efd;
       padding-left: 36px;
     }
+
     input:checked + .slider .icon {
       transform: rotate(360deg);
     }
-    #playerIdDisplay { display: none; }
-    .footer-animated {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  padding: 8px 0;
-  font-size: 0.85rem;
-  background: #f8f9fa;
-  color: #6c757d;
-  text-align: center;
-  border-top: 1px solid #e0e0e0;
-  animation: fadeInUp 1s ease-in-out;
-  z-index: 1000;
-}
-body.dark-mode .footer-animated {
-  background: #1a1a1a;
-  color: #ccc;
-  border-top: 1px solid #333;
-}
 
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+    #playerIdDisplay { display: none; }
+
+    footer.footer-animated {
+      background: #f8f9fa;
+      color: #6c757d;
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 10px;
+      border-top: 1px solid #dee2e6;
+      animation: fadeInUp 0.8s ease;
+    }
+
+    body.dark-mode footer.footer-animated {
+      background: #1a1a1a;
+      color: #ccc;
+      border-top: 1px solid #333;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
   <div class="container py-4 d-flex flex-column align-items-center">
     <h1 class="text-center mb-3">📝 To-Do List</h1>
-    <!-- ICON BUTTONS -->
+
+    <!-- Top Action Bar -->
     <div class="d-flex gap-3 mb-3">
       <label class="form-switch">
         <input type="checkbox" id="toggleDarkModeSwitch">
@@ -123,6 +138,7 @@ body.dark-mode .footer-animated {
       <button class="btn btn-outline-secondary icon-btn" title="Set Username" data-bs-toggle="modal" data-bs-target="#usernameModal">👤</button>
     </div>
 
+    <!-- Task Input -->
     <div class="card p-4 w-100" style="max-width: 800px;">
       <div class="row g-3">
         <div class="col-md-4"><input type="text" class="form-control js-array" placeholder="Enter task..."></div>
@@ -139,7 +155,8 @@ body.dark-mode .footer-animated {
       </div>
     </div>
 
-    <div class="todoAdded w-100 mt-4" style="max-width: 800px;"></div>
+    <!-- Task List Output -->
+    <div class="todoAdded w-100 mt-4 mb-5" style="max-width: 800px;"></div>
   </div>
 
   <!-- Notification Modal -->
@@ -175,14 +192,11 @@ body.dark-mode .footer-animated {
     </div>
   </div>
 
-  <!-- Edit Task Modal -->
+  <!-- Edit Modal -->
   <div class="modal fade" id="editModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Edit Task</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
+        <div class="modal-header"><h5 class="modal-title">Edit Task</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
         <div class="modal-body">
           <input type="text" id="editTaskName" class="form-control mb-2" placeholder="Task name" />
           <input type="time" id="editTaskTime" class="form-control mb-2" />
@@ -199,10 +213,16 @@ body.dark-mode .footer-animated {
       </div>
     </div>
   </div>
-<footer class="footer-animated text-center text-muted small">
-  © 2025 Brijesh Vyas • Crafted with ❤️ and ☕
-</footer>
+
+  <!-- ✅ Footer -->
+  <footer class="footer-animated mt-auto text-muted small">
+    © 2025 Brijesh Vyas • Crafted with ❤️ and ☕
+  </footer>
+
+  <!-- ✅ Audio -->
   <audio id="reminderSound" src="notification.mp3" preload="auto"></audio>
+
+  <!-- ✅ Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="script.js"></script>
 </body>
