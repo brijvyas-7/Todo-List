@@ -96,13 +96,11 @@ function deleteTodo(index) {
 function editTask(index) {
   currentEditIndex = index;
   const task = todoList[index];
-  const modal = document.getElementById("editModal");
-  if (!modal) return;
   document.getElementById("editTaskName").value = task.name;
   document.getElementById("editTaskTime").value = task.time;
   document.getElementById("editTaskDate").value = task.date;
   document.getElementById("editTaskPriority").value = task.priority;
-  new bootstrap.Modal(modal).show();
+  new bootstrap.Modal(document.getElementById("editModal")).show();
 }
 
 function saveEdit() {
@@ -117,7 +115,6 @@ function saveEdit() {
   bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
 }
 
-// ✅ Username logic
 function saveUsername() {
   const name = document.getElementById("usernameInput").value.trim();
   if (name) {
@@ -127,47 +124,31 @@ function saveUsername() {
   }
 }
 
-// ✅ Notification modal status check
-if (typeof window !== 'undefined') {
-  document.addEventListener("DOMContentLoaded", () => {
-    const statusText = document.getElementById("notifStatus");
-    const toggleBtn = document.getElementById("toggleNotifBtn");
-
-    function updateNotifStatus() {
-      if (window.OneSignal) {
-        OneSignal.isPushNotificationsEnabled().then(enabled => {
-          statusText.textContent = enabled ? "✅ Subscribed" : "❌ Not Subscribed";
-          toggleBtn.textContent = enabled ? "🔕 Unsubscribe" : "🔔 Subscribe";
-        }).catch(() => {
-          statusText.textContent = "❌ Error";
-        });
-      }
-    }
-
-    toggleBtn.addEventListener("click", () => {
-      OneSignal.isPushNotificationsEnabled().then(enabled => {
-        if (enabled) {
-          OneSignal.setSubscription(false).then(updateNotifStatus);
-        } else {
-          OneSignal.registerForPushNotifications().then(updateNotifStatus);
-        }
-      });
-    });
-
-    document.getElementById("notificationModal").addEventListener("show.bs.modal", updateNotifStatus);
-  });
-}
-
-window.onload = () => {
-  renderHTML();
-  const savedDark = localStorage.getItem("darkMode") === "true";
-  if (savedDark) {
+// ✅ Toggle system dark mode support
+function applySystemDarkMode() {
+  const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  if (isDark) {
     document.body.classList.add("dark-mode");
     document.getElementById("toggleDarkModeSwitch").checked = true;
     document.querySelector(".slider .icon").textContent = "☀️";
   } else {
+    document.body.classList.remove("dark-mode");
+    document.getElementById("toggleDarkModeSwitch").checked = false;
     document.querySelector(".slider .icon").textContent = "🌙";
   }
+}
+
+// ✅ Detect toggle manually
+const darkToggle = document.getElementById("toggleDarkModeSwitch");
+darkToggle.addEventListener("change", function () {
+  document.body.classList.toggle("dark-mode");
+  const icon = document.querySelector(".slider .icon");
+  icon.textContent = this.checked ? "☀️" : "🌙";
+});
+
+window.onload = () => {
+  renderHTML();
+  applySystemDarkMode();
 
   if ("Notification" in window && Notification.permission !== "granted") {
     Notification.requestPermission();
@@ -179,30 +160,3 @@ window.onload = () => {
       .catch(err => console.warn("❌ SW failed:", err));
   }
 };
-
-function applyTheme(isDark) {
-  document.body.classList.toggle("dark-mode", isDark);
-  localStorage.setItem("darkMode", isDark);
-  const icon = document.querySelector(".slider .icon");
-  if (icon) icon.textContent = isDark ? "☀️" : "🌙";
-  const toggle = document.getElementById("toggleDarkModeSwitch");
-  if (toggle) toggle.checked = isDark;
-}
-
-// 👂 Detect system preference on first load
-function getInitialTheme() {
-  const stored = localStorage.getItem("darkMode");
-  if (stored !== null) return stored === "true";
-  return window.matchMedia('(prefers-color-scheme: dark)').matches;
-}
-
-// 🚀 Apply on page load
-window.addEventListener("DOMContentLoaded", () => {
-  const isDark = getInitialTheme();
-  applyTheme(isDark);
-
-  const toggle = document.getElementById("toggleDarkModeSwitch");
-  if (toggle) {
-    toggle.addEventListener("change", () => applyTheme(toggle.checked));
-  }
-});
