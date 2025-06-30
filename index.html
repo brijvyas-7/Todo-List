@@ -85,7 +85,7 @@
       transform: rotate(360deg);
     }
     #playerIdDisplay { display: none; }
-    .footer-animated {
+   .footer-animated {
   position: fixed;
   bottom: 2px;
   width: 100%;
@@ -95,7 +95,8 @@
   color: #6c757d;
   text-align: center;
   border-top: 1px solid #e0e0e0;
-  animation: fadeInUp 1s ease-in-out;
+  opacity: 0;
+  animation: fadeInUp 1s ease-in-out, disappear 0.5s ease-in-out 5s forwards;
   z-index: 1000;
 }
 body.dark-mode .footer-animated {
@@ -108,8 +109,8 @@ body.dark-mode .footer-animated {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-body.dark-mode .footer-animated.text-muted {
-  color: #bbb !important;
+@keyframes disappear {
+  to { opacity: 0; visibility: hidden; }
 }
   </style>
 </head>
