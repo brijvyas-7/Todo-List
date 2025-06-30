@@ -3,21 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📝 To-Do List</title>
+  <title>To-Do App</title>
 
-  <!-- PWA & Icons -->
+  <!-- ✅ PWA Manifest -->
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="icon" href="icon-192.png" type="image/png" />
   <meta name="theme-color" content="#0d6efd" />
+
+  <!-- ✅ Mobile PWA Support -->
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="To-Do List" />
 
-  <!-- Bootstrap -->
+  <!-- ✅ Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 
-  <!-- OneSignal -->
+  <!-- ✅ OneSignal Web Push SDK -->
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
   <script>
     window.OneSignal = window.OneSignal || [];
@@ -82,25 +84,37 @@
     input:checked + .slider .icon {
       transform: rotate(360deg);
     }
-
     #playerIdDisplay { display: none; }
+    .footer-animated {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background: #f8f9fa;
+  color: #6c757d;
+  padding: 8px 0;
+  animation: fadeInUp 1.2s ease-in-out;
+  z-index: 1000;
+}
+body.dark-mode .footer-animated {
+  background: #1f1f1f;
+  color: #bbb;
+}
 
-    footer {
-      text-align: center;
-      font-size: 0.85rem;
-      color: #6c757d;
-      margin-top: 40px;
-      padding-bottom: 12px;
-    }
-    body.dark-mode footer {
-      color: #ccc;
-    }
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
   </style>
 </head>
 <body>
   <div class="container py-4 d-flex flex-column align-items-center">
     <h1 class="text-center mb-3">📝 To-Do List</h1>
-
     <!-- ICON BUTTONS -->
     <div class="d-flex gap-3 mb-3">
       <label class="form-switch">
@@ -111,7 +125,6 @@
       <button class="btn btn-outline-secondary icon-btn" title="Set Username" data-bs-toggle="modal" data-bs-target="#usernameModal">👤</button>
     </div>
 
-    <!-- Task Input Form -->
     <div class="card p-4 w-100" style="max-width: 800px;">
       <div class="row g-3">
         <div class="col-md-4"><input type="text" class="form-control js-array" placeholder="Enter task..."></div>
@@ -164,7 +177,7 @@
     </div>
   </div>
 
-  <!-- Edit Modal -->
+  <!-- Edit Task Modal -->
   <div class="modal fade" id="editModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -188,12 +201,9 @@
       </div>
     </div>
   </div>
-
-  <!-- Footer -->
-  <footer>
-    © 2025 Brijesh Vyas • Crafted with ❤️ and ☕
-  </footer>
-
+<footer class="footer-animated text-center text-muted small">
+  Made with ❤️ by <strong>Brijesh Vyas</strong> — fueled by ☕ & ideas 💡
+</footer>
   <audio id="reminderSound" src="notification.mp3" preload="auto"></audio>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="script.js"></script>
