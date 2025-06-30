@@ -1,18 +1,10 @@
-// ✅ Local storage based task list
+// script.js
+
 const todoList = JSON.parse(localStorage.getItem("todoList")) || [];
 let currentEditIndex = null;
 
-let username = localStorage.getItem("username") || "";
-
-if (!username) {
-  username = prompt("Enter your name:");
-  if (username) {
-    localStorage.setItem("username", username);
-  }
-}
-
-// 🔊 Unlock audio on first click
-addEventListener("click", () => {
+// Unlock audio on first interaction
+document.addEventListener("click", () => {
   const audio = document.getElementById("reminderSound");
   audio.play().then(() => {
     audio.pause();
@@ -25,10 +17,12 @@ function addInput() {
   const timeEl = document.querySelector(".time-todo");
   const dateEl = document.querySelector(".todo-date");
   const priority = document.querySelector(".todo-priority").value;
+
   const name = inputEl.value.trim();
   const time = timeEl.value;
   const date = dateEl.value;
   const playerId = localStorage.getItem("playerId");
+  const username = localStorage.getItem("username") || "";
 
   if (!name || !time || !date) return alert("Please fill out all fields.");
 
@@ -42,8 +36,12 @@ function addInput() {
     body: JSON.stringify(taskData),
   })
     .then(res => res.json())
-    .then(data => console.log("✅ Task saved to Firestore:", data))
-    .catch(err => console.error("❌ Failed to save task to backend:", err));
+    .then(data => {
+      console.log("✅ Task saved to Firestore:", data);
+    })
+    .catch(err => {
+      console.error("❌ Failed to save task to backend:", err);
+    });
 
   inputEl.value = "";
   timeEl.value = "";
@@ -124,7 +122,6 @@ function saveEdit() {
   bootstrap.Modal.getInstance(document.getElementById("editModal")).hide();
 }
 
-// 🌗 Dark Mode
 const darkToggle = document.getElementById("toggleDarkModeSwitch");
 const icon = document.querySelector(".slider .icon");
 
@@ -136,7 +133,6 @@ darkToggle.addEventListener("change", function () {
 
 window.onload = () => {
   renderHTML();
-
   const savedTheme = localStorage.getItem("darkMode") === "true";
   if (savedTheme) {
     document.body.classList.add("dark-mode");
@@ -157,3 +153,22 @@ window.onload = () => {
   }
 };
 
+setInterval(() => {
+  let found = false;
+  const now = new Date();
+  todoList.forEach(task => {
+    const target = new Date(`${task.date}T${task.time}`);
+    if (!task.alerted && now >= target) {
+      task.alerted = true;
+      const username = task.username || "Hey buddy";
+      const msg = `${username}, your task '${task.name}' is due now!`;
+      const toast = new bootstrap.Toast(document.getElementById("webToast"));
+      document.getElementById("webToastText").textContent = msg;
+      document.getElementById("reminderSound").play();
+      toast.show();
+      found = true;
+    }
+  });
+  localStorage.setItem("todoList", JSON.stringify(todoList));
+  if (!found) console.log("✅ No due tasks at this check.");
+}, 10000);
