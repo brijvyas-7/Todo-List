@@ -25,7 +25,7 @@ function addInput() {
 
   if (!name || !time || !date) return alert("Please fill out all fields.");
 
-  const task = { name, time, date, priority, alerted: false, completed: false, playerId, username, _justAdded: true };
+  const task = { name, time, date, priority, alerted: false, completed: false, playerId, username };
   todoList.push(task);
   localStorage.setItem("todoList", JSON.stringify(todoList));
 
@@ -42,43 +42,36 @@ function addInput() {
   document.querySelector(".time-todo").value = "";
   document.querySelector(".todo-date").value = "";
 
-  renderHTML();
+  renderHTML(true);
 }
 
-function renderHTML() {
+function renderHTML(scrollToNew = false) {
   const container = document.querySelector(".todoAdded");
   container.innerHTML = "";
   todoList.forEach((task, index) => {
     const badgeClass = task.priority === "High" ? "bg-danger" : task.priority === "Medium" ? "bg-warning text-dark" : "bg-success";
     const timeLeft = getTimeLeft(task.date, task.time);
 
-    const cardId = `task-${index}`;
-    const isNew = task._justAdded;
-
-    container.innerHTML += `
-      <div class="card mb-3 animate__animated ${isNew ? 'animate__fadeInUp' : ''}" id="${cardId}">
-        <div class="card-body d-flex justify-content-between align-items-center">
-          <div>
-            <h5 class="card-title mb-1 ${task.completed ? "completed" : ""}">${task.name}</h5>
-            <span class="badge ${badgeClass}">${task.priority}</span><br>
-            <small class="task-meta">⏰ ${task.time} | 📅 ${task.date}</small><br>
-            <span class="countdown">⏳ ${timeLeft}</span>
-          </div>
-          <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-outline-success" onclick="toggleComplete(${index})">✔️</button>
-            <button class="btn btn-sm btn-outline-secondary" onclick="editTask(${index})">✏️</button>
-            <button class="btn btn-sm btn-outline-danger" onclick="deleteTodo(${index})">🗑</button>
-          </div>
+    const card = document.createElement("div");
+    card.className = "card mb-3 animate__animated animate__fadeIn";
+    card.innerHTML = `
+      <div class="card-body d-flex justify-content-between align-items-center">
+        <div>
+          <h5 class="card-title mb-1 ${task.completed ? "completed" : ""}">${task.name}</h5>
+          <span class="badge ${badgeClass}">${task.priority}</span><br>
+          <small class="task-meta">⏰ ${task.time} | 📅 ${task.date}</small><br>
+          <span class="countdown">⏳ ${timeLeft}</span>
         </div>
-      </div>`;
-
-    if (isNew) {
-      setTimeout(() => {
-        const el = document.getElementById(cardId);
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-        delete task._justAdded;
-        localStorage.setItem("todoList", JSON.stringify(todoList));
-      }, 300);
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-success" onclick="toggleComplete(${index})">✔️</button>
+          <button class="btn btn-sm btn-outline-secondary" onclick="editTask(${index})">✏️</button>
+          <button class="btn btn-sm btn-outline-danger" onclick="deleteTodo(${index})">🗑</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+    if (scrollToNew && index === todoList.length - 1) {
+      setTimeout(() => card.scrollIntoView({ behavior: "smooth" }), 100);
     }
   });
 }
@@ -108,11 +101,13 @@ function deleteTodo(index) {
 function editTask(index) {
   currentEditIndex = index;
   const task = todoList[index];
+  const modal = document.getElementById("editModal");
+  if (!modal) return;
   document.getElementById("editTaskName").value = task.name;
   document.getElementById("editTaskTime").value = task.time;
   document.getElementById("editTaskDate").value = task.date;
   document.getElementById("editTaskPriority").value = task.priority;
-  new bootstrap.Modal(document.getElementById("editModal")).show();
+  new bootstrap.Modal(modal).show();
 }
 
 function saveEdit() {
@@ -136,20 +131,60 @@ function saveUsername() {
   }
 }
 
+// ✅ Notification modal status check
+if (typeof window !== 'undefined') {
+  document.addEventListener("DOMContentLoaded", () => {
+    const statusText = document.getElementById("notifStatus");
+    const toggleBtn = document.getElementById("toggleNotifBtn");
+
+    function updateNotifStatus() {
+      if (window.OneSignal) {
+        OneSignal.isPushNotificationsEnabled().then(enabled => {
+          statusText.textContent = enabled ? "✅ Subscribed" : "❌ Not Subscribed";
+          toggleBtn.textContent = enabled ? "🔕 Unsubscribe" : "🔔 Subscribe";
+        }).catch(() => {
+          statusText.textContent = "❌ Error";
+        });
+      } else {
+        statusText.textContent = "❌ Unavailable";
+      }
+    }
+
+    toggleBtn?.addEventListener("click", () => {
+      OneSignal.isPushNotificationsEnabled().then(enabled => {
+        if (enabled) {
+          OneSignal.setSubscription(false).then(updateNotifStatus);
+        } else {
+          OneSignal.registerForPushNotifications().then(updateNotifStatus);
+        }
+      });
+    });
+
+    document.getElementById("notificationModal")?.addEventListener("show.bs.modal", updateNotifStatus);
+  });
+}
+
+// 🌙 System Dark Mode Preference
 window.onload = () => {
   renderHTML();
-
-  const savedDark = localStorage.getItem("darkMode") === "true";
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const enableDark = savedDark || (!localStorage.getItem("darkMode") && prefersDark);
+  const saved = localStorage.getItem("darkMode");
+  const darkToggle = document.getElementById("toggleDarkModeSwitch");
+  const icon = document.querySelector(".slider .icon");
 
-  if (enableDark) {
+  if ((saved === null && prefersDark) || saved === "true") {
     document.body.classList.add("dark-mode");
-    document.getElementById("toggleDarkModeSwitch").checked = true;
-    document.querySelector(".slider .icon").textContent = "☀️";
+    darkToggle.checked = true;
+    icon.textContent = "☀️";
   } else {
-    document.querySelector(".slider .icon").textContent = "🌙";
+    icon.textContent = "🌙";
   }
+
+  darkToggle.addEventListener("change", function () {
+    document.body.classList.toggle("dark-mode");
+    localStorage.setItem("darkMode", document.body.classList.contains("dark-mode"));
+    icon.textContent = this.checked ? "☀️" : "🌙";
+  });
 
   if ("Notification" in window && Notification.permission !== "granted") {
     Notification.requestPermission();
@@ -159,35 +194,5 @@ window.onload = () => {
     navigator.serviceWorker.register("sw.js")
       .then(reg => console.log("✅ SW registered:", reg.scope))
       .catch(err => console.warn("❌ SW failed:", err));
-  }
-
-  const statusText = document.getElementById("notifStatus");
-  const toggleBtn = document.getElementById("toggleNotifBtn");
-
-  function updateNotifStatus() {
-    if (window.OneSignal && OneSignal.isPushNotificationsEnabled) {
-      OneSignal.isPushNotificationsEnabled().then(enabled => {
-        statusText.textContent = enabled ? "✅ Subscribed" : "❌ Not Subscribed";
-        toggleBtn.textContent = enabled ? "🔕 Unsubscribe" : "🔔 Subscribe";
-      }).catch(() => {
-        statusText.textContent = "❌ Error";
-      });
-    }
-  }
-
-  if (toggleBtn && statusText) {
-    toggleBtn.addEventListener("click", () => {
-      OneSignal.isPushNotificationsEnabled().then(enabled => {
-        if (enabled) {
-          OneSignal.setSubscription(false).then(updateNotifStatus);
-        } else {
-          OneSignal.registerForPushNotifications().then(updateNotifStatus);
-        }
-      });
-    });
-    const notifModal = document.getElementById("notificationModal");
-    if (notifModal) {
-      notifModal.addEventListener("show.bs.modal", updateNotifStatus);
-    }
   }
 };
