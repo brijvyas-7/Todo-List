@@ -54,7 +54,6 @@
 
     body {
       overflow-x: hidden;
-      overflow-y: auto;
     }
 
     body.dark-mode {
@@ -100,6 +99,8 @@
     #playerIdDisplay { display: none; }
 
     .footer-animated {
+      position: fixed;
+      bottom: 0;
       width: 100%;
       padding: 10px 0;
       font-size: 0.85rem;
@@ -107,16 +108,22 @@
       background: #f8f9fa;
       color: #495057;
       border-top: 1px solid #dee2e6;
+      opacity: 0.6;
+      transition: opacity 0.4s ease, transform 0.3s ease;
+      z-index: 1050;
+    }
+    .footer-animated:hover {
+      opacity: 1;
     }
     body.dark-mode .footer-animated {
       background: #121212;
-      color: #bbb;
+      color: #ccc;
       border-top: 1px solid #333;
     }
   </style>
 </head>
 <body>
-  <div class="container py-4 d-flex flex-column align-items-center">
+  <div class="container py-4 d-flex flex-column align-items-center flex-grow-1">
     <h1 class="text-center mb-3">📝 To-Do List</h1>
     <div class="d-flex gap-3 mb-3">
       <label class="form-switch">
@@ -146,7 +153,7 @@
     <div class="todoAdded w-100 mt-4" style="max-width: 800px;"></div>
   </div>
 
-  <!-- Notification Modal -->
+  <!-- Modals and Footer -->
   <div class="modal fade" id="notificationModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content bg-dark text-white">
@@ -162,7 +169,6 @@
     </div>
   </div>
 
-  <!-- Username Modal -->
   <div class="modal fade" id="usernameModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content bg-dark text-white">
@@ -179,7 +185,6 @@
     </div>
   </div>
 
-  <!-- Edit Task Modal -->
   <div class="modal fade" id="editModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
