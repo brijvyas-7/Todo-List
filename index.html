@@ -74,6 +74,14 @@
     input:checked + .slider .icon {
       transform: rotate(360deg);
     }
+    .dark-mode .modal-content {
+  background-color: #1f1f1f;
+  color: #fff;
+}
+
+.dark-mode .btn-close {
+  filter: invert(1);
+}
   </style>
 </head>
 <body>
@@ -133,22 +141,22 @@
     </div>
   </div>
 
-  <!-- Notification Modal -->
-  <div class="modal fade" id="notificationModal" tabindex="-1">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Notification Settings</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <p>Status: <strong id="notifStatus">Checking...</strong></p>
-          <button id="toggleNotifBtn" class="btn btn-secondary w-100 mb-2">Toggle Notifications</button>
-          <button id="testNotifBtn" class="btn btn-outline-success w-100">Send Test Notification</button>
-        </div>
+  <!-- 🔔 Notification Settings Modal -->
+<div class="modal fade" id="notificationModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content bg-light text-dark dark-mode-bg">
+      <div class="modal-header">
+        <h5 class="modal-title">🔔 Notification Settings</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>Status: <strong id="notifStatus">Checking...</strong></p>
+        <button id="toggleNotifBtn" class="btn btn-outline-primary w-100 mb-3">Toggle Notifications</button>
+        <button id="testNotifBtn" class="btn btn-outline-success w-100">Send Test Notification</button>
       </div>
     </div>
   </div>
+</div>
 
   <audio id="reminderSound" src="notification.mp3" preload="auto"></audio>
   <script>
